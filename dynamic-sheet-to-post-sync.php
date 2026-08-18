@@ -3,7 +3,7 @@
  * Plugin Name: Dynamic Sheet to Post Type Sync
  * Description: Imports and syncs Google Sheet CSV rows into any custom post type using a custom field-mapping UI and scheduled WP-Cron.
  * Version: 1.0.0
- * Author: Expert Developer
+ * Author: Eshmika Hettiarachchi
  * Text Domain: dynamic-sheet-sync
  * License: GPL2
  */
