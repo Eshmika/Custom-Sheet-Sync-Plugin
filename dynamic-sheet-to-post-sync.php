@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Dynamic Sheet to Post Type Sync & Vehicle Product Grid
- * Description: Automatically imports and syncs Google Sheet vehicle inventory into WordPress posts/products with multi-column titles, customizable specs, and a modern WooCommerce-style product grid shortcode.
- * Version: 2.0.0
+ * Description: Automatically imports and syncs Google Sheet vehicle inventory into WordPress posts/products with multi-column titles, Google Drive image gallery slider (AA & AB columns), responsive creative filters, 9-card pagination, and dedicated full vehicle information pages.
+ * Version: 2.1.0
  * Author: Eshmika Hettiarachchi
  * Text Domain: dynamic-sheet-sync
  * License: GPL2
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Class Dynamic_Sheet_Post_Sync
- * Main controller for sheet sync, mapping, and product showcase.
+ * Main controller for sheet sync, mapping, image slider, and product showcase.
  */
 class Dynamic_Sheet_Post_Sync {
 
@@ -31,6 +31,9 @@ class Dynamic_Sheet_Post_Sync {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_frontend_assets' ) );
 		add_shortcode( 'vehicle_products', array( $this, 'render_vehicle_products_shortcode' ) );
 		add_shortcode( 'vehicle_inventory', array( $this, 'render_vehicle_products_shortcode' ) );
+
+		// Hook single post content to render full car information page template.
+		add_filter( 'the_content', array( $this, 'render_single_vehicle_content' ) );
 
 		// Custom Cron intervals hook.
 		add_filter( 'cron_schedules', array( $this, 'add_cron_intervals' ) );
@@ -56,10 +59,10 @@ class Dynamic_Sheet_Post_Sync {
 		// Admin custom styles.
 		wp_add_inline_style( 'wp-color-picker', '
 			.sheet-sync-container { max-width: 1050px; margin-top: 20px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; }
-			.sheet-sync-card { background: #fff; border: 1px solid #dcdcde; border-radius: 8px; padding: 24px 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); margin-bottom: 24px; }
+			.sheet-sync-card { background: #fff; border: 1px solid #dcdcde; border-radius: 10px; padding: 24px 28px; box-shadow: 0 2px 5px rgba(0,0,0,0.04); margin-bottom: 24px; }
 			.sheet-sync-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f0f0f1; padding-bottom: 16px; margin-bottom: 20px; }
 			.sheet-sync-header h1 { margin: 0; font-size: 22px; font-weight: 700; color: #1d2327; display: flex; align-items: center; gap: 10px; }
-			.sheet-sync-badge { font-size: 12px; background: #e7f5ff; color: #0c85d0; font-weight: 600; padding: 4px 8px; border-radius: 4px; }
+			.sheet-sync-badge { font-size: 12px; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; font-weight: 700; padding: 4px 10px; border-radius: 20px; letter-spacing: 0.5px; }
 			.sheet-nav-tabs { display: flex; gap: 8px; border-bottom: 1px solid #c3c4c7; margin-bottom: 20px; }
 			.sheet-nav-tab { padding: 10px 18px; font-size: 14px; font-weight: 600; color: #50575e; cursor: pointer; border: 1px solid transparent; border-bottom: none; border-radius: 6px 6px 0 0; background: #f6f7f7; text-decoration: none; }
 			.sheet-nav-tab.active { background: #fff; color: #2271b1; border-color: #c3c4c7 #c3c4c7 #fff; margin-bottom: -1px; }
@@ -67,169 +70,304 @@ class Dynamic_Sheet_Post_Sync {
 			.sheet-tab-panel.active { display: block; }
 			.sheet-sync-table th { width: 240px; font-weight: 600; padding: 14px 10px 14px 0; color: #1d2327; font-size: 13.5px; }
 			.sheet-sync-table td { padding: 10px 0; }
-			.sheet-sync-table input[type="text"], .sheet-sync-table select, .sheet-sync-table textarea { width: 100%; max-width: 520px; border-radius: 4px; border: 1px solid #8c8f94; }
-			.status-box { background: #f0f6fc; border-left: 4px solid #2271b1; padding: 16px; border-radius: 0 6px 6px 0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+			.sheet-sync-table input[type="text"], .sheet-sync-table select, .sheet-sync-table textarea { width: 100%; max-width: 520px; border-radius: 6px; border: 1px solid #8c8f94; padding: 6px 10px; }
+			.status-box { background: #f0f6fc; border-left: 4px solid #2271b1; padding: 16px; border-radius: 0 8px 8px 0; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 			.status-box-content p { margin: 0 0 6px 0; font-size: 13.5px; }
 			.status-box-content p:last-child { margin-bottom: 0; }
 			.status-box-content strong { color: #1d2327; }
-			.repeater-table { width: 100%; border-collapse: collapse; margin: 12px 0; background: #fff; border: 1px solid #dcdcde; border-radius: 6px; overflow: hidden; }
+			.repeater-table { width: 100%; border-collapse: collapse; margin: 12px 0; background: #fff; border: 1px solid #dcdcde; border-radius: 8px; overflow: hidden; }
 			.repeater-table th { background: #f6f7f7; padding: 10px 12px; font-size: 13px; text-align: left; border-bottom: 1px solid #dcdcde; }
 			.repeater-table td { padding: 8px 12px; border-bottom: 1px solid #f0f0f1; vertical-align: middle; }
 			.repeater-table input, .repeater-table select { width: 100% !important; margin: 0; }
 			.btn-remove-row { color: #d63638; cursor: pointer; font-size: 18px; line-height: 1; transition: 0.2s; }
 			.btn-remove-row:hover { color: #a00; transform: scale(1.15); }
-			.shortcode-preview-box { background: #1e1e1e; color: #d4d4d4; padding: 14px 18px; border-radius: 6px; font-family: monospace; font-size: 13px; display: flex; align-items: center; justify-content: space-between; margin: 10px 0 20px 0; }
-			.copy-btn { background: #2271b1; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; font-family: sans-serif; font-weight: 600; }
-			.copy-btn:hover { background: #135e96; }
-			.helper-tag { display: inline-block; background: #f0f0f1; color: #3c434a; font-size: 11px; padding: 2px 6px; border-radius: 3px; font-family: monospace; cursor: pointer; margin-right: 4px; margin-top: 4px; }
-			.helper-tag:hover { background: #e0e0e0; }
+			.shortcode-preview-box { background: #111827; color: #f3f4f6; padding: 14px 18px; border-radius: 8px; font-family: monospace; font-size: 13px; display: flex; align-items: center; justify-content: space-between; margin: 10px 0 20px 0; border: 1px solid #374151; }
+			.copy-btn { background: #2563eb; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-family: sans-serif; font-weight: 600; transition: 0.2s; }
+			.copy-btn:hover { background: #1d4ed8; }
+			.helper-tag { display: inline-block; background: #e0f2fe; color: #0369a1; font-size: 11px; padding: 3px 8px; border-radius: 4px; font-family: monospace; cursor: pointer; margin-right: 6px; margin-top: 4px; font-weight: 600; }
+			.helper-tag:hover { background: #bae6fd; }
+			.col-pill { display: inline-block; background: #f1f5f9; color: #334155; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; }
 		' );
 	}
 
 	/**
-	 * Register and enqueue frontend styling and interactive scripts for vehicle cards.
+	 * Register and enqueue frontend styling and interactive scripts for vehicle cards and single page.
 	 */
 	public function enqueue_frontend_assets() {
 		wp_register_style( 'dynamic-vehicle-grid-css', false );
 		wp_enqueue_style( 'dynamic-vehicle-grid-css' );
 
-		// WooCommerce-like Vehicle Product Grid Styles.
+		// Creative, Responsive Vehicle Showroom Styles.
 		wp_add_inline_style( 'dynamic-vehicle-grid-css', '
 			:root {
 				--vg-primary: #2563eb;
 				--vg-primary-hover: #1d4ed8;
-				--vg-accent: #10b981;
-				--vg-text: #1f2937;
-				--vg-text-muted: #6b7280;
-				--vg-bg: #f9fafb;
+				--vg-accent: #059669;
+				--vg-text-main: #0f172a;
+				--vg-text-muted: #64748b;
+				--vg-bg: #f8fafc;
 				--vg-card-bg: #ffffff;
-				--vg-border: #e5e7eb;
-				--vg-radius: 12px;
-				--vg-shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
-				--vg-shadow-hover: 0 12px 20px -3px rgba(0,0,0,0.12), 0 4px 6px -4px rgba(0,0,0,0.07);
+				--vg-border: #e2e8f0;
+				--vg-border-focus: #3b82f6;
+				--vg-radius-lg: 16px;
+				--vg-radius-md: 10px;
+				--vg-radius-sm: 6px;
+				--vg-shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+				--vg-shadow-md: 0 4px 14px -2px rgba(15,23,42,0.08), 0 2px 6px -2px rgba(15,23,42,0.04);
+				--vg-shadow-hover: 0 20px 25px -5px rgba(15,23,42,0.12), 0 8px 10px -6px rgba(15,23,42,0.06);
 			}
+
 			.vehicle-grid-container {
 				max-width: 1280px;
 				margin: 30px auto;
-				padding: 0 15px;
-				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+				padding: 0 16px;
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 				box-sizing: border-box;
+				color: var(--vg-text-main);
 			}
 			.vehicle-grid-container * { box-sizing: border-box; }
-			
-			/* Filter & Search Bar */
-			.vehicle-filter-bar {
-				background: var(--vg-card-bg);
+
+			/* ==========================================================================
+			   CREATIVE & RESPONSIVE FILTER BAR
+			   ========================================================================== */
+			.vehicle-filter-wrapper {
+				background: linear-gradient(145deg, #ffffff, #f8fafc);
 				border: 1px solid var(--vg-border);
-				border-radius: var(--vg-radius);
-				padding: 16px 20px;
-				margin-bottom: 28px;
+				border-radius: var(--vg-radius-lg);
+				padding: 20px 24px;
+				margin-bottom: 30px;
+				box-shadow: var(--vg-shadow-md);
+				position: relative;
+			}
+			.vehicle-filter-main-row {
 				display: flex;
 				flex-wrap: wrap;
-				gap: 12px;
+				gap: 14px;
 				align-items: center;
 				justify-content: space-between;
-				box-shadow: var(--vg-shadow);
 			}
 			.vehicle-search-box {
 				position: relative;
-				flex: 1 1 260px;
+				flex: 1 1 280px;
+				min-width: 240px;
 			}
-			.vehicle-search-box input {
+			.vehicle-search-input {
 				width: 100%;
-				padding: 10px 14px 10px 38px;
-				border: 1px solid var(--vg-border);
-				border-radius: 8px;
-				font-size: 14px;
+				height: 46px;
+				padding: 10px 40px 10px 42px;
+				border: 1.5px solid var(--vg-border);
+				border-radius: var(--vg-radius-md);
+				font-size: 14.5px;
+				color: var(--vg-text-main);
+				background: #ffffff;
 				outline: none;
-				transition: border-color 0.2s;
+				transition: all 0.25s ease;
 			}
-			.vehicle-search-box input:focus { border-color: var(--vg-primary); }
+			.vehicle-search-input:focus {
+				border-color: var(--vg-primary);
+				box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
+			}
 			.vehicle-search-icon {
 				position: absolute;
-				left: 12px;
+				left: 14px;
 				top: 50%;
 				transform: translateY(-50%);
 				color: var(--vg-text-muted);
+				font-size: 16px;
 				pointer-events: none;
 			}
+			.vehicle-search-clear {
+				position: absolute;
+				right: 12px;
+				top: 50%;
+				transform: translateY(-50%);
+				background: #e2e8f0;
+				color: #475569;
+				border: none;
+				width: 22px;
+				height: 22px;
+				border-radius: 50%;
+				font-size: 13px;
+				line-height: 1;
+				cursor: pointer;
+				display: none;
+				align-items: center;
+				justify-content: center;
+				transition: 0.2s;
+			}
+			.vehicle-search-clear:hover { background: #cbd5e1; color: #0f172a; }
+
 			.vehicle-filter-controls {
 				display: flex;
 				flex-wrap: wrap;
 				gap: 10px;
 				align-items: center;
 			}
+			.vehicle-select-wrap {
+				position: relative;
+				min-width: 135px;
+			}
 			.vehicle-filter-select {
-				padding: 9px 14px;
-				border: 1px solid var(--vg-border);
-				border-radius: 8px;
+				width: 100%;
+				height: 46px;
+				padding: 8px 32px 8px 14px;
+				border: 1.5px solid var(--vg-border);
+				border-radius: var(--vg-radius-md);
 				font-size: 13.5px;
-				color: var(--vg-text);
-				background-color: #fff;
+				font-weight: 500;
+				color: var(--vg-text-main);
+				background-color: #ffffff;
 				cursor: pointer;
 				outline: none;
+				appearance: none;
+				-webkit-appearance: none;
+				transition: all 0.2s ease;
 			}
-			.vehicle-filter-select:focus { border-color: var(--vg-primary); }
-			.vehicle-reset-btn {
-				background: #f3f4f6;
+			.vehicle-filter-select:focus {
+				border-color: var(--vg-primary);
+				box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+			}
+			.vehicle-select-arrow {
+				position: absolute;
+				right: 12px;
+				top: 50%;
+				transform: translateY(-50%);
+				pointer-events: none;
 				color: var(--vg-text-muted);
-				border: 1px solid var(--vg-border);
-				padding: 9px 14px;
-				border-radius: 8px;
-				font-size: 13px;
-				font-weight: 500;
-				cursor: pointer;
-				transition: 0.2s;
+				font-size: 10px;
 			}
-			.vehicle-reset-btn:hover { background: #e5e7eb; color: var(--vg-text); }
+			.vehicle-reset-btn {
+				height: 46px;
+				padding: 0 18px;
+				background: #f1f5f9;
+				color: #475569;
+				border: 1.5px solid var(--vg-border);
+				border-radius: var(--vg-radius-md);
+				font-size: 13.5px;
+				font-weight: 600;
+				cursor: pointer;
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				transition: all 0.2s ease;
+			}
+			.vehicle-reset-btn:hover {
+				background: #e2e8f0;
+				color: #0f172a;
+				border-color: #cbd5e1;
+			}
 
-			/* Product Grid Layout */
+			.vehicle-filter-meta-bar {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				margin-top: 14px;
+				padding-top: 14px;
+				border-top: 1px solid var(--vg-border);
+				font-size: 13px;
+				color: var(--vg-text-muted);
+			}
+			.vehicle-count-badge {
+				font-weight: 600;
+				color: var(--vg-text-main);
+			}
+			.vehicle-active-chips {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 6px;
+				align-items: center;
+			}
+			.vehicle-chip {
+				background: #eff6ff;
+				color: #1d4ed8;
+				border: 1px solid #bfdbfe;
+				padding: 3px 10px;
+				border-radius: 20px;
+				font-size: 12px;
+				font-weight: 600;
+				display: inline-flex;
+				align-items: center;
+				gap: 5px;
+			}
+			.vehicle-chip-remove {
+				cursor: pointer;
+				font-size: 14px;
+				line-height: 1;
+				color: #3b82f6;
+			}
+			.vehicle-chip-remove:hover { color: #1e40af; }
+
+			/* ==========================================================================
+			   VEHICLE PRODUCT GRID (9 PER PAGE)
+			   ========================================================================== */
 			.vehicle-grid {
 				display: grid;
 				grid-template-columns: repeat(var(--vg-cols, 3), 1fr);
-				gap: 26px;
+				gap: 28px;
 			}
 			@media (max-width: 1024px) {
-				.vehicle-grid { grid-template-columns: repeat(2, 1fr) !important; }
+				.vehicle-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 20px; }
 			}
 			@media (max-width: 640px) {
-				.vehicle-grid { grid-template-columns: 1fr !important; }
+				.vehicle-grid { grid-template-columns: 1fr !important; gap: 18px; }
+				.vehicle-filter-wrapper { padding: 16px; }
+				.vehicle-select-wrap { width: 100%; min-width: 100%; }
+				.vehicle-reset-btn { width: 100%; justify-content: center; }
 			}
 
-			/* Product Card */
+			/* ==========================================================================
+			   STREAMLINED VEHICLE CARD
+			   ========================================================================== */
 			.vehicle-card {
 				background: var(--vg-card-bg);
 				border: 1px solid var(--vg-border);
-				border-radius: var(--vg-radius);
+				border-radius: var(--vg-radius-lg);
 				overflow: hidden;
 				display: flex;
 				flex-direction: column;
-				transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-				box-shadow: var(--vg-shadow);
+				transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+				box-shadow: var(--vg-shadow-sm);
 				position: relative;
 			}
 			.vehicle-card:hover {
-				transform: translateY(-5px);
+				transform: translateY(-6px);
 				box-shadow: var(--vg-shadow-hover);
 				border-color: #cbd5e1;
 			}
 
-			/* Card Image & Badges */
-			.vehicle-card-img-wrap {
+			/* ==========================================================================
+			   IMAGE SLIDER (CAROUSEL)
+			   ========================================================================== */
+			.vehicle-card-slider-container {
 				position: relative;
 				width: 100%;
-				height: 220px;
-				background: #f1f5f9;
+				height: 230px;
+				background: #0f172a;
 				overflow: hidden;
+				user-select: none;
 			}
-			.vehicle-card-img {
+			.vehicle-slider-track {
+				display: flex;
+				width: 100%;
+				height: 100%;
+				transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+			}
+			.vehicle-slider-slide {
+				flex: 0 0 100%;
+				width: 100%;
+				height: 100%;
+				position: relative;
+				background: #0f172a;
+			}
+			.vehicle-slider-img {
 				width: 100%;
 				height: 100%;
 				object-fit: cover;
+				display: block;
 				transition: transform 0.4s ease;
 			}
-			.vehicle-card:hover .vehicle-card-img {
-				transform: scale(1.05);
+			.vehicle-card:hover .vehicle-slider-slide.active .vehicle-slider-img {
+				transform: scale(1.04);
 			}
 			.vehicle-card-placeholder {
 				width: 100%;
@@ -241,318 +379,705 @@ class Dynamic_Sheet_Post_Sync {
 				color: #94a3b8;
 				background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
 			}
-			.vehicle-card-placeholder svg { width: 56px; height: 56px; fill: currentColor; }
-			.vehicle-badge-top {
+			.vehicle-card-placeholder svg { width: 50px; height: 50px; fill: currentColor; }
+
+			/* Slider Navigation Controls */
+			.vehicle-slider-btn {
 				position: absolute;
-				top: 12px;
-				left: 12px;
-				background: rgba(15, 23, 42, 0.82);
-				color: #fff;
-				font-size: 11.5px;
-				font-weight: 700;
-				padding: 4px 10px;
-				border-radius: 6px;
-				letter-spacing: 0.5px;
-				text-transform: uppercase;
+				top: 50%;
+				transform: translateY(-50%);
+				width: 34px;
+				height: 34px;
+				background: rgba(15, 23, 42, 0.7);
+				color: #ffffff;
+				border: 1px solid rgba(255,255,255,0.2);
+				border-radius: 50%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				cursor: pointer;
+				font-size: 18px;
+				line-height: 1;
+				z-index: 5;
+				opacity: 0;
+				transition: all 0.25s ease;
 				backdrop-filter: blur(4px);
-				z-index: 2;
 			}
-			.vehicle-badge-id {
+			.vehicle-card:hover .vehicle-slider-btn {
+				opacity: 1;
+			}
+			.vehicle-slider-btn:hover {
+				background: rgba(37, 99, 235, 0.95);
+				border-color: #2563eb;
+				transform: translateY(-50%) scale(1.1);
+			}
+			.vehicle-slider-btn.prev { left: 10px; }
+			.vehicle-slider-btn.next { right: 10px; }
+
+			/* Slider Counter & Dots */
+			.vehicle-slider-counter {
 				position: absolute;
-				top: 12px;
+				bottom: 10px;
 				right: 12px;
-				background: #fff;
-				color: var(--vg-text);
+				background: rgba(15, 23, 42, 0.75);
+				color: #ffffff;
 				font-size: 11px;
 				font-weight: 700;
 				padding: 3px 8px;
-				border-radius: 4px;
-				box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-				z-index: 2;
+				border-radius: 12px;
+				letter-spacing: 0.5px;
+				backdrop-filter: blur(4px);
+				z-index: 4;
+			}
+			.vehicle-slider-dots {
+				position: absolute;
+				bottom: 10px;
+				left: 50%;
+				transform: translateX(-50%);
+				display: flex;
+				gap: 5px;
+				z-index: 4;
+			}
+			.vehicle-slider-dot {
+				width: 6px;
+				height: 6px;
+				border-radius: 50%;
+				background: rgba(255, 255, 255, 0.5);
+				transition: all 0.25s ease;
+				cursor: pointer;
+			}
+			.vehicle-slider-dot.active {
+				width: 18px;
+				border-radius: 10px;
+				background: #ffffff;
 			}
 
-			/* Card Body */
+			/* ==========================================================================
+			   STREAMLINED CARD BODY (Title, Price, View Details only)
+			   ========================================================================== */
 			.vehicle-card-body {
-				padding: 18px 20px;
+				padding: 20px 22px 22px;
 				display: flex;
 				flex-direction: column;
 				flex: 1;
+				justify-content: space-between;
 			}
-			.vehicle-card-header {
-				margin-bottom: 12px;
+			.vehicle-card-content {
+				margin-bottom: 18px;
 			}
 			.vehicle-card-title {
-				font-size: 17px;
+				font-size: 18px;
 				font-weight: 700;
-				color: var(--vg-text);
-				margin: 0 0 6px 0;
+				color: var(--vg-text-main);
+				margin: 0 0 10px 0;
 				line-height: 1.35;
+				letter-spacing: -0.2px;
 			}
-			.vehicle-card-price {
-				font-size: 19px;
-				font-weight: 800;
+			.vehicle-card-title a {
+				color: inherit;
+				text-decoration: none;
+				transition: color 0.2s ease;
+			}
+			.vehicle-card-title a:hover {
 				color: var(--vg-primary);
+			}
+			.vehicle-card-price-wrap {
 				display: flex;
-				align-items: center;
+				align-items: baseline;
 				gap: 4px;
 			}
-
-			/* Key Specs Pills Grid */
-			.vehicle-specs-grid {
-				display: grid;
-				grid-template-columns: repeat(2, 1fr);
-				gap: 8px;
-				margin: 14px 0 18px 0;
-				padding: 12px;
-				background: #f8fafc;
-				border-radius: 8px;
-				border: 1px solid #edf2f7;
+			.vehicle-card-price-label {
+				font-size: 12px;
+				font-weight: 600;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+				color: var(--vg-text-muted);
 			}
-			.vehicle-spec-item {
+			.vehicle-card-price {
+				font-size: 22px;
+				font-weight: 800;
+				color: var(--vg-primary);
+				letter-spacing: -0.5px;
+			}
+			.vehicle-card-price .currency {
+				font-size: 16px;
+				font-weight: 700;
+				margin-right: 2px;
+			}
+
+			/* Card Action Button */
+			.vehicle-card-actions {
+				margin-top: auto;
+			}
+			.vehicle-btn-details {
+				width: 100%;
 				display: flex;
 				align-items: center;
-				gap: 7px;
-				font-size: 12.5px;
-				color: var(--vg-text);
-			}
-			.vehicle-spec-icon {
+				justify-content: center;
+				gap: 8px;
+				padding: 12px 18px;
+				background: linear-gradient(135deg, var(--vg-primary) 0%, var(--vg-primary-hover) 100%);
+				color: #ffffff !important;
 				font-size: 14px;
-				line-height: 1;
-				opacity: 0.85;
+				font-weight: 700;
+				border-radius: var(--vg-radius-md);
+				text-decoration: none !important;
+				border: none;
+				cursor: pointer;
+				box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+				transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 			}
-			.vehicle-spec-label {
-				color: var(--vg-text-muted);
-				font-size: 11px;
-				display: block;
+			.vehicle-btn-details .btn-arrow {
+				transition: transform 0.25s ease;
 			}
-			.vehicle-spec-val {
-				font-weight: 600;
-				color: var(--vg-text);
+			.vehicle-btn-details:hover {
+				background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+				box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+				transform: translateY(-1px);
+			}
+			.vehicle-btn-details:hover .btn-arrow {
+				transform: translateX(4px);
 			}
 
-			/* Card Actions */
-			.vehicle-card-footer {
-				margin-top: auto;
-				padding-top: 14px;
-				border-top: 1px solid #f1f5f9;
+			/* ==========================================================================
+			   PAGINATION CONTROLS (9 PER PAGE)
+			   ========================================================================== */
+			.vehicle-pagination-container {
+				margin-top: 40px;
 				display: flex;
-				gap: 10px;
+				flex-wrap: wrap;
+				align-items: center;
+				justify-content: center;
+				gap: 8px;
 			}
-			.vehicle-btn {
-				flex: 1;
-				text-align: center;
-				padding: 10px 14px;
-				border-radius: 8px;
-				font-size: 13.5px;
-				font-weight: 600;
-				text-decoration: none !important;
-				cursor: pointer;
+			.vehicle-page-btn {
+				min-width: 42px;
+				height: 42px;
+				padding: 0 12px;
 				display: inline-flex;
 				align-items: center;
 				justify-content: center;
-				gap: 6px;
-				transition: 0.2s ease;
-				border: none;
+				background: #ffffff;
+				border: 1.5px solid var(--vg-border);
+				border-radius: var(--vg-radius-md);
+				font-size: 14px;
+				font-weight: 600;
+				color: var(--vg-text-main);
+				cursor: pointer;
+				transition: all 0.2s ease;
+				user-select: none;
+				text-decoration: none;
 			}
-			.vehicle-btn-primary {
-				background: var(--vg-primary);
-				color: #fff !important;
-			}
-			.vehicle-btn-primary:hover {
-				background: var(--vg-primary-hover);
-				color: #fff !important;
-			}
-			.vehicle-btn-outline {
-				background: #fff;
-				color: var(--vg-text) !important;
-				border: 1px solid var(--vg-border);
-			}
-			.vehicle-btn-outline:hover {
-				background: #f3f4f6;
+			.vehicle-page-btn:hover:not(.disabled):not(.active) {
+				background: #f1f5f9;
 				border-color: #cbd5e1;
+				color: var(--vg-primary);
 			}
-			.vehicle-btn-whatsapp {
-				background: #25d366;
-				color: #fff !important;
+			.vehicle-page-btn.active {
+				background: var(--vg-primary);
+				border-color: var(--vg-primary);
+				color: #ffffff;
+				box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
 			}
-			.vehicle-btn-whatsapp:hover {
-				background: #1eb956;
-				color: #fff !important;
+			.vehicle-page-btn.disabled {
+				opacity: 0.45;
+				cursor: not-allowed;
+			}
+			.vehicle-page-ellipsis {
+				padding: 0 6px;
+				font-weight: 700;
+				color: var(--vg-text-muted);
 			}
 
-			/* Quick Details Modal */
-			.vehicle-modal-backdrop {
-				position: fixed;
-				inset: 0;
-				background: rgba(15, 23, 42, 0.65);
-				backdrop-filter: blur(4px);
-				display: none;
-				align-items: center;
-				justify-content: center;
-				z-index: 999999;
-				padding: 20px;
-			}
-			.vehicle-modal-content {
-				background: #fff;
-				border-radius: 16px;
-				max-width: 750px;
-				width: 100%;
-				max-height: 90vh;
-				overflow-y: auto;
-				position: relative;
-				box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-				animation: vgModalIn 0.25s ease-out;
-			}
-			@keyframes vgModalIn {
-				from { opacity: 0; transform: scale(0.95) translateY(10px); }
-				to { opacity: 1; transform: scale(1) translateY(0); }
-			}
-			.vehicle-modal-close {
-				position: absolute;
-				top: 14px;
-				right: 16px;
-				background: rgba(0,0,0,0.4);
-				color: #fff;
-				border: none;
-				border-radius: 50%;
-				width: 32px;
-				height: 32px;
-				font-size: 20px;
-				cursor: pointer;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				z-index: 10;
-				transition: 0.2s;
-			}
-			.vehicle-modal-close:hover { background: rgba(0,0,0,0.7); }
-			.vehicle-modal-img {
-				width: 100%;
-				height: 300px;
-				object-fit: cover;
-				background: #f1f5f9;
-			}
-			.vehicle-modal-body {
-				padding: 24px 28px;
-			}
-			.vehicle-modal-title {
-				font-size: 22px;
-				font-weight: 800;
-				margin: 0 0 8px 0;
-				color: var(--vg-text);
-			}
-			.vehicle-modal-price {
-				font-size: 24px;
-				font-weight: 800;
-				color: var(--vg-primary);
-				margin-bottom: 18px;
-			}
-			.vehicle-modal-specs-table {
-				width: 100%;
-				border-collapse: collapse;
-				margin: 16px 0;
-			}
-			.vehicle-modal-specs-table th, .vehicle-modal-specs-table td {
-				padding: 10px 14px;
-				border-bottom: 1px solid #f1f5f9;
-				text-align: left;
-				font-size: 13.5px;
-			}
-			.vehicle-modal-specs-table th {
-				color: var(--vg-text-muted);
-				font-weight: 600;
-				width: 40%;
-				background: #f8fafc;
-			}
-			.vehicle-modal-desc {
-				font-size: 14px;
-				line-height: 1.6;
-				color: var(--vg-text-muted);
-				margin-top: 14px;
-				padding-top: 14px;
-				border-top: 1px solid #f1f5f9;
-			}
+			/* No Results State */
 			.vehicle-no-results {
 				grid-column: 1 / -1;
 				text-align: center;
-				padding: 50px 20px;
-				background: #f8fafc;
-				border-radius: var(--vg-radius);
-				border: 1px dashed var(--vg-border);
+				padding: 60px 20px;
+				background: #ffffff;
+				border-radius: var(--vg-radius-lg);
+				border: 2px dashed var(--vg-border);
 				color: var(--vg-text-muted);
+			}
+			.vehicle-no-results svg { width: 56px; height: 56px; fill: #94a3b8; margin-bottom: 12px; }
+			.vehicle-no-results h3 { font-size: 18px; color: var(--vg-text-main); margin: 0 0 6px 0; }
+
+			/* ==========================================================================
+			   FULL VEHICLE INFORMATION SINGLE PAGE
+			   ========================================================================== */
+			.vehicle-single-page {
+				max-width: 1200px;
+				margin: 30px auto;
+				padding: 0 20px;
+				font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+				color: var(--vg-text-main);
+			}
+			.vehicle-single-breadcrumbs {
+				margin-bottom: 20px;
+				font-size: 13.5px;
+				color: var(--vg-text-muted);
+			}
+			.vehicle-single-breadcrumbs a {
+				color: var(--vg-primary);
+				text-decoration: none;
+				font-weight: 600;
+			}
+			.vehicle-single-breadcrumbs a:hover { text-decoration: underline; }
+
+			.vehicle-single-layout {
+				display: grid;
+				grid-template-columns: 1.35fr 1fr;
+				gap: 36px;
+				align-items: start;
+			}
+			@media (max-width: 900px) {
+				.vehicle-single-layout { grid-template-columns: 1fr; }
+			}
+
+			/* Single Gallery */
+			.vehicle-single-gallery {
+				background: #ffffff;
+				border: 1px solid var(--vg-border);
+				border-radius: var(--vg-radius-lg);
+				padding: 12px;
+				box-shadow: var(--vg-shadow-sm);
+			}
+			.vehicle-single-main-img-wrap {
+				position: relative;
+				width: 100%;
+				height: 420px;
+				border-radius: var(--vg-radius-md);
+				overflow: hidden;
+				background: #0f172a;
+			}
+			.vehicle-single-main-img {
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				display: block;
+			}
+			.vehicle-single-thumbs {
+				display: flex;
+				gap: 10px;
+				margin-top: 12px;
+				overflow-x: auto;
+				padding-bottom: 4px;
+			}
+			.vehicle-single-thumb {
+				width: 80px;
+				height: 60px;
+				border-radius: var(--vg-radius-sm);
+				overflow: hidden;
+				cursor: pointer;
+				border: 2px solid transparent;
+				opacity: 0.65;
+				flex: 0 0 80px;
+				transition: all 0.2s ease;
+			}
+			.vehicle-single-thumb:hover, .vehicle-single-thumb.active {
+				opacity: 1;
+				border-color: var(--vg-primary);
+			}
+			.vehicle-single-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+			/* Single Details Panel */
+			.vehicle-single-info-panel {
+				background: #ffffff;
+				border: 1px solid var(--vg-border);
+				border-radius: var(--vg-radius-lg);
+				padding: 28px;
+				box-shadow: var(--vg-shadow-md);
+			}
+			.vehicle-single-title {
+				font-size: 26px;
+				font-weight: 800;
+				margin: 0 0 8px 0;
+				line-height: 1.25;
+				color: var(--vg-text-main);
+			}
+			.vehicle-single-id-tag {
+				display: inline-block;
+				background: #f1f5f9;
+				color: #475569;
+				font-size: 12px;
+				font-weight: 700;
+				padding: 4px 10px;
+				border-radius: 20px;
+				margin-bottom: 16px;
+			}
+			.vehicle-single-price-box {
+				background: linear-gradient(135deg, #eff6ff, #f8fafc);
+				border: 1px solid #bfdbfe;
+				border-radius: var(--vg-radius-md);
+				padding: 16px 20px;
+				margin-bottom: 24px;
+				display: flex;
+				align-items: baseline;
+				justify-content: space-between;
+			}
+			.vehicle-single-price {
+				font-size: 30px;
+				font-weight: 800;
+				color: var(--vg-primary);
+			}
+
+			/* Specs Table */
+			.vehicle-single-specs-grid {
+				display: grid;
+				grid-template-columns: repeat(2, 1fr);
+				gap: 12px;
+				margin: 20px 0;
+			}
+			.vehicle-single-spec-card {
+				background: #f8fafc;
+				border: 1px solid #e2e8f0;
+				border-radius: var(--vg-radius-md);
+				padding: 12px 14px;
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+			.vehicle-single-spec-icon { font-size: 18px; }
+			.vehicle-single-spec-label { font-size: 11.5px; color: var(--vg-text-muted); display: block; }
+			.vehicle-single-spec-val { font-size: 13.5px; font-weight: 700; color: var(--vg-text-main); }
+
+			.vehicle-single-actions {
+				margin-top: 24px;
+				display: flex;
+				flex-direction: column;
+				gap: 12px;
+			}
+			.vehicle-single-btn-whatsapp {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 8px;
+				padding: 14px 20px;
+				background: #25d366;
+				color: #ffffff !important;
+				font-size: 15px;
+				font-weight: 700;
+				border-radius: var(--vg-radius-md);
+				text-decoration: none !important;
+				transition: 0.2s ease;
+				box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
+			}
+			.vehicle-single-btn-whatsapp:hover { background: #1eb956; transform: translateY(-1px); }
+
+			.vehicle-single-desc-section {
+				margin-top: 36px;
+				background: #ffffff;
+				border: 1px solid var(--vg-border);
+				border-radius: var(--vg-radius-lg);
+				padding: 28px;
+				box-shadow: var(--vg-shadow-sm);
+			}
+			.vehicle-single-desc-section h3 {
+				font-size: 18px;
+				font-weight: 700;
+				margin: 0 0 14px 0;
+				color: var(--vg-text-main);
 			}
 		' );
 
-		// Frontend interactive script for filtering & modal.
+		// Frontend interactive script for slider, filters, and 9-card pagination.
 		wp_register_script( 'dynamic-vehicle-grid-js', false, array( 'jquery' ), false, true );
 		wp_enqueue_script( 'dynamic-vehicle-grid-js' );
 
 		wp_add_inline_script( 'dynamic-vehicle-grid-js', '
 			jQuery(document).ready(function($) {
-				// Client-side quick filter and search.
-				function applyVehicleFilters() {
-					var searchTerm = $(".vehicle-search-input").val() ? $(".vehicle-search-input").val().toLowerCase() : "";
+
+				// ==========================================================
+				// 1. MULTI-IMAGE CARD SLIDER LOGIC
+				// ==========================================================
+				function updateCardSlider($container, newIndex) {
+					var $track = $container.find(".vehicle-slider-track");
+					var $slides = $container.find(".vehicle-slider-slide");
+					var total = $slides.length;
+					if (total <= 1) return;
+
+					if (newIndex < 0) newIndex = total - 1;
+					if (newIndex >= total) newIndex = 0;
+
+					$container.data("current-index", newIndex);
+					$track.css("transform", "translateX(-" + (newIndex * 100) + "%)");
+					$slides.removeClass("active").eq(newIndex).addClass("active");
+					$container.find(".vehicle-slider-dot").removeClass("active").eq(newIndex).addClass("active");
+					$container.find(".vehicle-slider-counter").text((newIndex + 1) + " / " + total);
+				}
+
+				// Slider Previous Button
+				$(document).on("click", ".vehicle-slider-btn.prev", function(e) {
+					e.preventDefault();
+					e.stopPropagation();
+					var $container = $(this).closest(".vehicle-card-slider-container");
+					var curr = parseInt($container.data("current-index") || 0, 10);
+					updateCardSlider($container, curr - 1);
+				});
+
+				// Slider Next Button
+				$(document).on("click", ".vehicle-slider-btn.next", function(e) {
+					e.preventDefault();
+					e.stopPropagation();
+					var $container = $(this).closest(".vehicle-card-slider-container");
+					var curr = parseInt($container.data("current-index") || 0, 10);
+					updateCardSlider($container, curr + 1);
+				});
+
+				// Slider Dot Click
+				$(document).on("click", ".vehicle-slider-dot", function(e) {
+					e.preventDefault();
+					e.stopPropagation();
+					var $dot = $(this);
+					var idx = parseInt($dot.data("index") || 0, 10);
+					var $container = $dot.closest(".vehicle-card-slider-container");
+					updateCardSlider($container, idx);
+				});
+
+				// Touch Swipe support for card slider
+				var touchStartX = 0;
+				var touchEndX = 0;
+				$(document).on("touchstart", ".vehicle-card-slider-container", function(e) {
+					touchStartX = e.originalEvent.touches[0].clientX;
+				});
+				$(document).on("touchend", ".vehicle-card-slider-container", function(e) {
+					touchEndX = e.originalEvent.changedTouches[0].clientX;
+					var diff = touchStartX - touchEndX;
+					if (Math.abs(diff) > 40) {
+						var $container = $(this);
+						var curr = parseInt($container.data("current-index") || 0, 10);
+						if (diff > 0) {
+							updateCardSlider($container, curr + 1);
+						} else {
+							updateCardSlider($container, curr - 1);
+						}
+					}
+				});
+
+				// ==========================================================
+				// 2. CREATIVE FILTER & 9-CARD PAGINATION SYSTEM
+				// ==========================================================
+				var perPage = 9;
+				var currentPage = 1;
+
+				function getFilteredCards() {
+					var searchTerm = ($(".vehicle-search-input").val() || "").trim().toLowerCase();
 					var fuelFilter = $(".vehicle-filter-fuel").val() || "";
 					var yearFilter = $(".vehicle-filter-year").val() || "";
 					var transFilter = $(".vehicle-filter-transmission").val() || "";
 
-					var visibleCount = 0;
+					var $allCards = $(".vehicle-card");
+					var matching = [];
 
-					$(".vehicle-card").each(function() {
+					$allCards.each(function() {
 						var $card = $(this);
-						var title = ($card.data("title") || "").toLowerCase();
-						var carId = ($card.data("id") || "").toLowerCase();
-						var fuel = $card.data("fuel") || "";
-						var year = $card.data("year") || "";
-						var trans = $card.data("transmission") || "";
+						var title = ($card.data("title") || "").toString().toLowerCase();
+						var carId = ($card.data("id") || "").toString().toLowerCase();
+						var fuel = ($card.data("fuel") || "").toString();
+						var year = ($card.data("year") || "").toString();
+						var trans = ($card.data("transmission") || "").toString();
 
 						var matchesSearch = !searchTerm || title.indexOf(searchTerm) > -1 || carId.indexOf(searchTerm) > -1;
-						var matchesFuel = !fuelFilter || fuel == fuelFilter;
-						var matchesYear = !yearFilter || year == yearFilter;
-						var matchesTrans = !transFilter || trans == transFilter;
+						var matchesFuel = !fuelFilter || fuel === fuelFilter;
+						var matchesYear = !yearFilter || year === yearFilter;
+						var matchesTrans = !transFilter || trans === transFilter;
 
 						if (matchesSearch && matchesFuel && matchesYear && matchesTrans) {
-							$card.fadeIn(200);
-							visibleCount++;
-						} else {
-							$card.fadeOut(200);
+							matching.push($card);
 						}
 					});
 
-					if (visibleCount === 0) {
-						$(".vehicle-no-results").show();
-					} else {
-						$(".vehicle-no-results").hide();
+					return matching;
+				}
+
+				function renderPagination(totalMatches, activePage) {
+					var $pagination = $(".vehicle-pagination-container");
+					$pagination.empty();
+
+					var totalPages = Math.ceil(totalMatches / perPage);
+					if (totalPages <= 1) {
+						return; // No pagination needed for 1 page
+					}
+
+					// Prev button
+					var $prev = $("<button>", {
+						type: "button",
+						class: "vehicle-page-btn vehicle-page-nav prev" + (activePage === 1 ? " disabled" : ""),
+						html: "&laquo; Prev",
+						"data-page": activePage - 1
+					});
+					$pagination.append($prev);
+
+					// Page numbers
+					for (var i = 1; i <= totalPages; i++) {
+						if (totalPages > 7) {
+							if (i > 2 && i < totalPages - 1 && Math.abs(i - activePage) > 1) {
+								if (i === 3 || i === totalPages - 2) {
+									$pagination.append($("<span>", { class: "vehicle-page-ellipsis", text: "..." }));
+								}
+								continue;
+							}
+						}
+
+						var $pageBtn = $("<button>", {
+							type: "button",
+							class: "vehicle-page-btn" + (i === activePage ? " active" : ""),
+							text: i,
+							"data-page": i
+						});
+						$pagination.append($pageBtn);
+					}
+
+					// Next button
+					var $next = $("<button>", {
+						type: "button",
+						class: "vehicle-page-btn vehicle-page-nav next" + (activePage === totalPages ? " disabled" : ""),
+						html: "Next &raquo;",
+						"data-page": activePage + 1
+					});
+					$pagination.append($next);
+				}
+
+				function updateActiveChips() {
+					var $chipsContainer = $(".vehicle-active-chips");
+					$chipsContainer.empty();
+
+					var fuel = $(".vehicle-filter-fuel").val();
+					var year = $(".vehicle-filter-year").val();
+					var trans = $(".vehicle-filter-transmission").val();
+					var search = $(".vehicle-search-input").val();
+
+					if (search) {
+						$chipsContainer.append("<span class=\"vehicle-chip\">Search: " + search + " <span class=\"vehicle-chip-remove\" data-target=\"search\">&times;</span></span>");
+					}
+					if (fuel) {
+						$chipsContainer.append("<span class=\"vehicle-chip\">Fuel: " + fuel + " <span class=\"vehicle-chip-remove\" data-target=\"fuel\">&times;</span></span>");
+					}
+					if (year) {
+						$chipsContainer.append("<span class=\"vehicle-chip\">Year: " + year + " <span class=\"vehicle-chip-remove\" data-target=\"year\">&times;</span></span>");
+					}
+					if (trans) {
+						$chipsContainer.append("<span class=\"vehicle-chip\">Trans: " + trans + " <span class=\"vehicle-chip-remove\" data-target=\"trans\">&times;</span></span>");
 					}
 				}
 
+				function applyFiltersAndPagination(resetToPageOne) {
+					if (resetToPageOne) {
+						currentPage = 1;
+					}
+
+					var matchingCards = getFilteredCards();
+					var totalMatches = matchingCards.length;
+					var totalPages = Math.ceil(totalMatches / perPage);
+
+					if (currentPage > totalPages && totalPages > 0) {
+						currentPage = totalPages;
+					}
+
+					var startIndex = (currentPage - 1) * perPage;
+					var endIndex = startIndex + perPage;
+
+					// Hide all cards first
+					$(".vehicle-card").hide();
+
+					// Show only cards in current page slice
+					for (var i = 0; i < matchingCards.length; i++) {
+						if (i >= startIndex && i < endIndex) {
+							matchingCards[i].fadeIn(150);
+						}
+					}
+
+					// Update result count text
+					if (totalMatches === 0) {
+						$(".vehicle-no-results").show();
+						$(".vehicle-count-badge").text("Showing 0 vehicles");
+					} else {
+						$(".vehicle-no-results").hide();
+						var startDisplay = startIndex + 1;
+						var endDisplay = Math.min(endIndex, totalMatches);
+						$(".vehicle-count-badge").text("Showing " + startDisplay + "–" + endDisplay + " of " + totalMatches + " vehicles");
+					}
+
+					// Render Pagination buttons
+					renderPagination(totalMatches, currentPage);
+					updateActiveChips();
+
+					// Toggle search clear button
+					if ($(".vehicle-search-input").val()) {
+						$(".vehicle-search-clear").css("display", "inline-flex");
+					} else {
+						$(".vehicle-search-clear").hide();
+					}
+				}
+
+				// Search input listener
 				$(document).on("input keyup", ".vehicle-search-input", function() {
-					applyVehicleFilters();
+					applyFiltersAndPagination(true);
 				});
 
+				// Clear search button
+				$(document).on("click", ".vehicle-search-clear", function() {
+					$(".vehicle-search-input").val("");
+					applyFiltersAndPagination(true);
+				});
+
+				// Filter Select Change
 				$(document).on("change", ".vehicle-filter-select", function() {
-					applyVehicleFilters();
+					applyFiltersAndPagination(true);
 				});
 
+				// Reset Filters Button
 				$(document).on("click", ".vehicle-reset-btn", function() {
 					$(".vehicle-search-input").val("");
 					$(".vehicle-filter-select").val("");
-					applyVehicleFilters();
+					applyFiltersAndPagination(true);
 				});
 
-				// Quick Details Modal Trigger.
-				$(document).on("click", ".btn-view-vehicle-details", function(e) {
+				// Active Chip Remove Click
+				$(document).on("click", ".vehicle-chip-remove", function() {
+					var target = $(this).data("target");
+					if (target === "search") $(".vehicle-search-input").val("");
+					if (target === "fuel") $(".vehicle-filter-fuel").val("");
+					if (target === "year") $(".vehicle-filter-year").val("");
+					if (target === "trans") $(".vehicle-filter-transmission").val("");
+					applyFiltersAndPagination(true);
+				});
+
+				// Pagination Click Handler
+				$(document).on("click", ".vehicle-page-btn", function(e) {
 					e.preventDefault();
-					var modalId = $(this).data("target-modal");
-					$("#" + modalId).css("display", "flex");
-					$("body").css("overflow", "hidden");
+					var $btn = $(this);
+					if ($btn.hasClass("disabled") || $btn.hasClass("active")) return;
+
+					var targetPage = parseInt($btn.data("page"), 10);
+					if (targetPage > 0) {
+						currentPage = targetPage;
+						applyFiltersAndPagination(false);
+
+						// Smooth scroll to top of grid
+						var $container = $(".vehicle-grid-container");
+						if ($container.length) {
+							$("html, body").animate({
+								scrollTop: $container.offset().top - 80
+							}, 300);
+						}
+					}
 				});
 
-				$(document).on("click", ".vehicle-modal-close, .vehicle-modal-backdrop", function(e) {
-					if (e.target === this) {
-						$(".vehicle-modal-backdrop").hide();
-						$("body").css("overflow", "auto");
-					}
+				// Initial run
+				if ($(".vehicle-grid").length) {
+					applyFiltersAndPagination(true);
+				}
+
+				// ==========================================================
+				// 3. SINGLE PAGE GALLERY THUMBNAIL CLICK
+				// ==========================================================
+				$(document).on("click", ".vehicle-single-thumb", function() {
+					var $thumb = $(this);
+					var fullSrc = $thumb.data("full-src");
+					$(".vehicle-single-thumb").removeClass("active");
+					$thumb.addClass("active");
+					$(".vehicle-single-main-img").attr("src", fullSrc);
 				});
 			});
 		' );
@@ -607,12 +1132,13 @@ class Dynamic_Sheet_Post_Sync {
 			$output['title_template'] = sanitize_text_field( trim( $input['title_template'] ) );
 		}
 
+		// Main and Sub Image Column Mappings (Default AA and AB).
+		$output['field_image']     = isset( $input['field_image'] ) && '' !== trim( $input['field_image'] ) ? sanitize_text_field( trim( $input['field_image'] ) ) : 'AA';
+		$output['field_sub_images'] = isset( $input['field_sub_images'] ) && '' !== trim( $input['field_sub_images'] ) ? sanitize_text_field( trim( $input['field_sub_images'] ) ) : 'AB';
+
 		// Standard Field mappings.
 		if ( isset( $input['field_content'] ) ) {
 			$output['field_content'] = sanitize_text_field( trim( $input['field_content'] ) );
-		}
-		if ( isset( $input['field_image'] ) ) {
-			$output['field_image'] = sanitize_text_field( trim( $input['field_image'] ) );
 		}
 		if ( isset( $input['field_status'] ) ) {
 			$output['field_status'] = sanitize_text_field( trim( $input['field_status'] ) );
@@ -701,7 +1227,7 @@ class Dynamic_Sheet_Post_Sync {
 	}
 
 	/**
-	 * Convert Column Letter (e.g. A, B, C, AA) to 0-based column index.
+	 * Convert Column Letter (e.g. A, B, C, AA, AB) to 0-based column index.
 	 */
 	public static function letter_to_col_index( $letter ) {
 		$letter = strtoupper( trim( $letter ) );
@@ -717,7 +1243,7 @@ class Dynamic_Sheet_Post_Sync {
 	}
 
 	/**
-	 * Resolve column index in row from either Column Letter (A, B, C...) or Column Header Name.
+	 * Resolve column index in row from either Column Letter (A, B, C... AA, AB) or Column Header Name.
 	 */
 	public static function resolve_col_index( $col_identifier, $headers ) {
 		if ( empty( $col_identifier ) ) {
@@ -726,7 +1252,7 @@ class Dynamic_Sheet_Post_Sync {
 
 		$col_identifier = trim( $col_identifier );
 
-		// 1. Check if column identifier is a pure Column Letter (A, B, C... Z, AA...).
+		// 1. Check if column identifier is a pure Column Letter (A, B, C... Z, AA, AB...).
 		if ( preg_match( '/^[A-Za-z]+$/', $col_identifier ) ) {
 			$letter_idx = self::letter_to_col_index( $col_identifier );
 			// If it matches an exact header name, prefer header name, otherwise use letter index.
@@ -749,14 +1275,72 @@ class Dynamic_Sheet_Post_Sync {
 	}
 
 	/**
-	 * Build dynamic title from template or multi-column definitions.
+	 * Convert Google Drive share link into high-speed direct streamable image URL.
+	 */
+	public static function convert_google_drive_url( $url ) {
+		$url = trim( $url );
+		if ( empty( $url ) ) {
+			return '';
+		}
+
+		// Extract Google Drive File ID from various link formats.
+		$file_id = '';
+		if ( preg_match( '/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/i', $url, $matches ) ) {
+			$file_id = $matches[1];
+		} elseif ( preg_match( '/(?:drive|docs)\.google\.com\/(?:open|uc|thumbnail)\?(?:[^&]+&)*id=([a-zA-Z0-9_-]+)/i', $url, $matches ) ) {
+			$file_id = $matches[1];
+		} elseif ( preg_match( '/lh3\.googleusercontent\.com\/d\/([a-zA-Z0-9_-]+)/i', $url, $matches ) ) {
+			$file_id = $matches[1];
+		}
+
+		if ( ! empty( $file_id ) ) {
+			// Direct Google UserContent CDN link with high resolution size parameter.
+			return 'https://lh3.googleusercontent.com/d/' . $file_id . '=s1600';
+		}
+
+		return esc_url_raw( $url );
+	}
+
+	/**
+	 * Parse and convert multiple Google Drive image URLs (from Column AA & AB).
+	 */
+	public static function parse_gallery_image_urls( $main_img_raw, $sub_imgs_raw ) {
+		$gallery = array();
+
+		// Main Image (Column AA).
+		if ( ! empty( $main_img_raw ) ) {
+			$main_converted = self::convert_google_drive_url( $main_img_raw );
+			if ( ! empty( $main_converted ) ) {
+				$gallery[] = $main_converted;
+			}
+		}
+
+		// Sub Images (Column AB - separated by comma or newline).
+		if ( ! empty( $sub_imgs_raw ) ) {
+			$sub_list = preg_split( '/[,|\n\r]+/', $sub_imgs_raw );
+			foreach ( $sub_list as $sub_item ) {
+				$sub_item = trim( $sub_item );
+				if ( ! empty( $sub_item ) ) {
+					$converted = self::convert_google_drive_url( $sub_item );
+					if ( ! empty( $converted ) && ! in_array( $converted, $gallery, true ) ) {
+						$gallery[] = $converted;
+					}
+				}
+			}
+		}
+
+		return $gallery;
+	}
+
+	/**
+	 * Build dynamic title from template or multi-column definitions (e.g. {Car Name} {Model} {Year}).
 	 */
 	public static function build_dynamic_title( $template, $row_data, $headers, $fallback_id = '' ) {
 		if ( empty( $template ) ) {
 			$template = '{Car Name} {Model} {Year}';
 		}
 
-		// Extract all placeholders like {Car Name}, {Model}, {C}, {D}, {E}.
+		// Extract all placeholders like {Car Name}, {Model}, {Year}, {C}, {D}, {E}.
 		$title = preg_replace_callback( '/\{([^}]+)\}/', function( $matches ) use ( $row_data, $headers ) {
 			$col_ref = trim( $matches[1] );
 			$idx = Dynamic_Sheet_Post_Sync::resolve_col_index( $col_ref, $headers );
@@ -802,19 +1386,20 @@ class Dynamic_Sheet_Post_Sync {
 		$options = get_option( 'dynamic_sheet_sync_options', array() );
 
 		// Set default values.
-		$csv_url         = isset( $options['csv_url'] ) ? $options['csv_url'] : '';
-		$target_pt       = isset( $options['post_type'] ) ? $options['post_type'] : 'post';
-		$uid_sheet_col   = isset( $options['uid_sheet_col'] ) ? $options['uid_sheet_col'] : 'Car ID';
-		$uid_meta_key    = isset( $options['uid_meta_key'] ) ? $options['uid_meta_key'] : '_vehicle_car_id';
-		$title_template  = isset( $options['title_template'] ) ? $options['title_template'] : '{Car Name} {Model} {Year}';
-		$field_content   = isset( $options['field_content'] ) ? $options['field_content'] : 'Description';
-		$field_image     = isset( $options['field_image'] ) ? $options['field_image'] : 'Image URL';
-		$field_status    = isset( $options['field_status'] ) ? $options['field_status'] : 'Status';
-		$field_price     = isset( $options['field_price'] ) ? $options['field_price'] : 'Price';
-		$currency_symbol = isset( $options['currency_symbol'] ) ? $options['currency_symbol'] : '$';
-		$whatsapp_number = isset( $options['whatsapp_number'] ) ? $options['whatsapp_number'] : '';
-		$frequency       = isset( $options['frequency'] ) ? $options['frequency'] : 'hourly';
-		$custom_meta     = isset( $options['custom_meta'] ) && is_array( $options['custom_meta'] ) ? $options['custom_meta'] : array();
+		$csv_url          = isset( $options['csv_url'] ) ? $options['csv_url'] : '';
+		$target_pt        = isset( $options['post_type'] ) ? $options['post_type'] : 'post';
+		$uid_sheet_col    = isset( $options['uid_sheet_col'] ) ? $options['uid_sheet_col'] : 'Car ID';
+		$uid_meta_key     = isset( $options['uid_meta_key'] ) ? $options['uid_meta_key'] : '_vehicle_car_id';
+		$title_template   = isset( $options['title_template'] ) ? $options['title_template'] : '{Car Name} {Model} {Year}';
+		$field_image      = isset( $options['field_image'] ) ? $options['field_image'] : 'AA';
+		$field_sub_images = isset( $options['field_sub_images'] ) ? $options['field_sub_images'] : 'AB';
+		$field_content    = isset( $options['field_content'] ) ? $options['field_content'] : 'Description';
+		$field_status     = isset( $options['field_status'] ) ? $options['field_status'] : 'Status';
+		$field_price      = isset( $options['field_price'] ) ? $options['field_price'] : 'Price';
+		$currency_symbol  = isset( $options['currency_symbol'] ) ? $options['currency_symbol'] : '$';
+		$whatsapp_number  = isset( $options['whatsapp_number'] ) ? $options['whatsapp_number'] : '';
+		$frequency        = isset( $options['frequency'] ) ? $options['frequency'] : 'hourly';
+		$custom_meta      = isset( $options['custom_meta'] ) && is_array( $options['custom_meta'] ) ? $options['custom_meta'] : array();
 
 		// Default initial vehicle custom meta rows if empty.
 		if ( empty( $custom_meta ) ) {
@@ -835,9 +1420,9 @@ class Dynamic_Sheet_Post_Sync {
 				<div class="sheet-sync-header">
 					<div>
 						<h1>🚗 <?php esc_html_e( 'Vehicle Sheet Sync & Product Catalog', 'dynamic-sheet-sync' ); ?></h1>
-						<p style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;"><?php esc_html_e( 'Seamlessly import vehicle inventory from Google Sheets and display as high-converting WooCommerce-style product cards.', 'dynamic-sheet-sync' ); ?></p>
+						<p style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;"><?php esc_html_e( 'Seamlessly import vehicle inventory from Google Sheets and display as high-converting vehicle showcase cards with Google Drive image sliders and dedicated detail pages.', 'dynamic-sheet-sync' ); ?></p>
 					</div>
-					<span class="sheet-sync-badge">v2.0 PRO</span>
+					<span class="sheet-sync-badge">v2.1 PRO</span>
 				</div>
 
 				<?php settings_errors(); ?>
@@ -850,7 +1435,7 @@ class Dynamic_Sheet_Post_Sync {
 							if ( ! empty( $options['last_sync_time'] ) ) {
 								$timestamp = get_date_from_gmt( $options['last_sync_time'], get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) );
 								printf(
-									/* translators: 1: formatted date/time, 2: total items, 3: created count, 4: updated count */
+									/* translators: 1: formatted date/time, 2: total items, 3: created count, 4: updated count, 5: status text */
 									esc_html__( 'Last run on %1$s. Processed %2$d vehicles (Created: %3$d, Updated: %4$d). Status: %5$s', 'dynamic-sheet-sync' ),
 									esc_html( $timestamp ),
 									intval( $options['last_sync_total'] ),
@@ -892,7 +1477,7 @@ class Dynamic_Sheet_Post_Sync {
 								<th scope="row"><label for="csv_url"><?php esc_html_e( 'Google Sheet Published CSV URL', 'dynamic-sheet-sync' ); ?></label></th>
 								<td>
 									<input type="text" id="csv_url" name="dynamic_sheet_sync_options[csv_url]" value="<?php echo esc_url( $csv_url ); ?>" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv" class="regular-text" />
-									<p class="description"><?php esc_html_e( 'In Google Sheets: File > Share > Publish to web > Select CSV format and paste the URL here.', 'dynamic-sheet-sync' ); ?></p>
+									<p class="description"><?php esc_html_e( 'In Google Sheets: File > Share > Publish to web > Select CSV format and paste the published URL here.', 'dynamic-sheet-sync' ); ?></p>
 								</td>
 							</tr>
 
@@ -905,7 +1490,7 @@ class Dynamic_Sheet_Post_Sync {
 											<option value="<?php echo esc_attr( $slug ); ?>" <?php selected( $target_pt, $slug ); ?>><?php echo esc_html( $name ); ?></option>
 										<?php endforeach; ?>
 									</select>
-									<p class="description"><?php esc_html_e( 'Select the post type to store vehicles into (e.g. Posts, Products, or custom Vehicle post type).', 'dynamic-sheet-sync' ); ?></p>
+									<p class="description"><?php esc_html_e( 'Select the post type to store vehicles into (Posts, Products, or custom vehicle post type).', 'dynamic-sheet-sync' ); ?></p>
 								</td>
 							</tr>
 
@@ -922,10 +1507,10 @@ class Dynamic_Sheet_Post_Sync {
 										</div>
 										<div style="flex: 1; max-width: 250px;">
 											<label style="display:block; font-weight:600; font-size:12px; margin-bottom:4px;" for="uid_meta_key"><?php esc_html_e( 'WordPress Meta Key', 'dynamic-sheet-sync' ); ?></label>
-											<input type="text" id="uid_meta_key" name="dynamic_sheet_sync_options[uid_meta_key]" value="<?php echo esc_attr( $uid_meta_key ); ?>" placeholder="e.g. _vehicle_car_id or _sku" />
+											<input type="text" id="uid_meta_key" name="dynamic_sheet_sync_options[uid_meta_key]" value="<?php echo esc_attr( $uid_meta_key ); ?>" placeholder="e.g. _vehicle_car_id" />
 										</div>
 									</div>
-									<p class="description"><?php esc_html_e( 'Enter Column Letter (e.g. B) or Header Name (e.g. Car ID). This prevents duplicate imports and updates existing vehicles.', 'dynamic-sheet-sync' ); ?></p>
+									<p class="description"><?php esc_html_e( 'Enter Column Letter (e.g. B) or Header Name (e.g. Car ID). Prevents duplicates and updates existing vehicles.', 'dynamic-sheet-sync' ); ?></p>
 								</td>
 							</tr>
 
@@ -933,20 +1518,41 @@ class Dynamic_Sheet_Post_Sync {
 							<tr>
 								<th scope="row"><label for="title_template"><?php esc_html_e( 'Product Title Template', 'dynamic-sheet-sync' ); ?></label></th>
 								<td>
-									<input type="text" id="title_template" name="dynamic_sheet_sync_options[title_template]" value="<?php echo esc_attr( $title_template ); ?>" placeholder="{Car Name} {Model} {Year} or {C} {D} {E}" class="regular-text" />
+									<input type="text" id="title_template" name="dynamic_sheet_sync_options[title_template]" value="<?php echo esc_attr( $title_template ); ?>" placeholder="{Car Name} {Model} {Year}" class="regular-text" />
 									<p class="description" style="margin-top: 4px;">
-										<?php esc_html_e( 'Combine multiple columns into the vehicle title. Examples:', 'dynamic-sheet-sync' ); ?>
+										<?php esc_html_e( 'Combines columns into a single vehicle title:', 'dynamic-sheet-sync' ); ?>
 										<br/>
 										<span class="helper-tag" onclick="document.getElementById('title_template').value='{Car Name} {Model} {Year}'">{Car Name} {Model} {Year}</span>
 										<span class="helper-tag" onclick="document.getElementById('title_template').value='{C} {D} {E}'">{C} {D} {E} (Column Letters)</span>
-										<span class="helper-tag" onclick="document.getElementById('title_template').value='{Year} {Car Name} {Model}'">{Year} {Car Name} {Model}</span>
+									</p>
+								</td>
+							</tr>
+
+							<!-- Google Drive Images (AA and AB) -->
+							<tr style="background: #f0fdf4; border-top: 1px solid #bbf7d0; border-bottom: 1px solid #bbf7d0;">
+								<th scope="row" style="padding-left: 12px;">
+									<strong>🖼️ <?php esc_html_e( 'Google Drive Image Columns (Slider)', 'dynamic-sheet-sync' ); ?></strong>
+								</th>
+								<td>
+									<div style="display: flex; gap: 15px; flex-wrap: wrap;">
+										<div style="flex: 1; max-width: 250px;">
+											<label style="display:block; font-weight:600; font-size:12px; margin-bottom:4px;" for="field_image"><?php esc_html_e( 'Main Image Column (Default: AA)', 'dynamic-sheet-sync' ); ?></label>
+											<input type="text" id="field_image" name="dynamic_sheet_sync_options[field_image]" value="<?php echo esc_attr( $field_image ); ?>" placeholder="AA" />
+										</div>
+										<div style="flex: 1; max-width: 250px;">
+											<label style="display:block; font-weight:600; font-size:12px; margin-bottom:4px;" for="field_sub_images"><?php esc_html_e( 'Sub Images Column (Default: AB)', 'dynamic-sheet-sync' ); ?></label>
+											<input type="text" id="field_sub_images" name="dynamic_sheet_sync_options[field_sub_images]" value="<?php echo esc_attr( $field_sub_images ); ?>" placeholder="AB" />
+										</div>
+									</div>
+									<p class="description" style="color: #166534; font-weight: 500;">
+										<?php esc_html_e( 'Column AA contains the main Google Drive image link. Column AB contains comma-separated sub-image Google Drive links. These automatically feed into the interactive card image slider and single vehicle page gallery.', 'dynamic-sheet-sync' ); ?>
 									</p>
 								</td>
 							</tr>
 
 							<!-- Standard Mappings -->
 							<tr>
-								<th scope="row"><?php esc_html_e( 'Core Vehicle Field Columns', 'dynamic-sheet-sync' ); ?></th>
+								<th scope="row"><?php esc_html_e( 'Other Vehicle Columns', 'dynamic-sheet-sync' ); ?></th>
 								<td>
 									<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 520px;">
 										<div>
@@ -954,35 +1560,27 @@ class Dynamic_Sheet_Post_Sync {
 											<input type="text" id="field_price" name="dynamic_sheet_sync_options[field_price]" value="<?php echo esc_attr( $field_price ); ?>" placeholder="e.g. Price or F" />
 										</div>
 										<div>
-											<label style="display:block; font-weight:600; font-size:12px; margin-bottom: 3px;" for="field_image"><?php esc_html_e( 'Featured Image URL Column', 'dynamic-sheet-sync' ); ?></label>
-											<input type="text" id="field_image" name="dynamic_sheet_sync_options[field_image]" value="<?php echo esc_attr( $field_image ); ?>" placeholder="e.g. Image URL or G" />
-										</div>
-										<div>
-											<label style="display:block; font-weight:600; font-size:12px; margin-bottom: 3px;" for="field_content"><?php esc_html_e( 'Description / Details Column', 'dynamic-sheet-sync' ); ?></label>
+											<label style="display:block; font-weight:600; font-size:12px; margin-bottom: 3px;" for="field_content"><?php esc_html_e( 'Description Column', 'dynamic-sheet-sync' ); ?></label>
 											<input type="text" id="field_content" name="dynamic_sheet_sync_options[field_content]" value="<?php echo esc_attr( $field_content ); ?>" placeholder="e.g. Description or Details" />
 										</div>
 										<div>
 											<label style="display:block; font-weight:600; font-size:12px; margin-bottom: 3px;" for="field_status"><?php esc_html_e( 'Stock / Post Status Column', 'dynamic-sheet-sync' ); ?></label>
-											<input type="text" id="field_status" name="dynamic_sheet_sync_options[field_status]" value="<?php echo esc_attr( $field_status ); ?>" placeholder="e.g. Status (publish/draft)" />
+											<input type="text" id="field_status" name="dynamic_sheet_sync_options[field_status]" value="<?php echo esc_attr( $field_status ); ?>" placeholder="e.g. Status" />
+										</div>
+										<div>
+											<label style="display:block; font-weight:600; font-size:12px; margin-bottom: 3px;" for="currency_symbol"><?php esc_html_e( 'Currency Symbol', 'dynamic-sheet-sync' ); ?></label>
+											<input type="text" id="currency_symbol" name="dynamic_sheet_sync_options[currency_symbol]" value="<?php echo esc_attr( $currency_symbol ); ?>" placeholder="$" />
 										</div>
 									</div>
 								</td>
 							</tr>
 
-							<!-- Global Display Settings -->
+							<!-- Global WhatsApp Settings -->
 							<tr>
-								<th scope="row"><?php esc_html_e( 'Pricing & Inquiries', 'dynamic-sheet-sync' ); ?></th>
+								<th scope="row"><label for="whatsapp_number"><?php esc_html_e( 'WhatsApp Inquiry Phone', 'dynamic-sheet-sync' ); ?></label></th>
 								<td>
-									<div style="display: flex; gap: 14px; max-width: 520px;">
-										<div style="flex: 1;">
-											<label style="display:block; font-weight:600; font-size:12px; margin-bottom: 3px;" for="currency_symbol"><?php esc_html_e( 'Currency Symbol', 'dynamic-sheet-sync' ); ?></label>
-											<input type="text" id="currency_symbol" name="dynamic_sheet_sync_options[currency_symbol]" value="<?php echo esc_attr( $currency_symbol ); ?>" placeholder="$" style="width: 80px;" />
-										</div>
-										<div style="flex: 2;">
-											<label style="display:block; font-weight:600; font-size:12px; margin-bottom: 3px;" for="whatsapp_number"><?php esc_html_e( 'WhatsApp Inquiry Phone (Optional)', 'dynamic-sheet-sync' ); ?></label>
-											<input type="text" id="whatsapp_number" name="dynamic_sheet_sync_options[whatsapp_number]" value="<?php echo esc_attr( $whatsapp_number ); ?>" placeholder="e.g. 15551234567" />
-										</div>
-									</div>
+									<input type="text" id="whatsapp_number" name="dynamic_sheet_sync_options[whatsapp_number]" value="<?php echo esc_attr( $whatsapp_number ); ?>" placeholder="e.g. 15551234567" class="regular-text" />
+									<p class="description"><?php esc_html_e( 'Phone number with country code for direct WhatsApp vehicle inquiries on single product pages.', 'dynamic-sheet-sync' ); ?></p>
 								</td>
 							</tr>
 
@@ -1007,7 +1605,7 @@ class Dynamic_Sheet_Post_Sync {
 						<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
 							<div>
 								<h3 style="margin:0 0 4px 0; font-size: 16px;"><?php esc_html_e( 'Vehicle Specs & Custom Attributes Mapping', 'dynamic-sheet-sync' ); ?></h3>
-								<p class="description" style="margin:0;"><?php esc_html_e( 'Map any additional Google Sheet columns to WordPress vehicle specs to display them on product cards or details popup.', 'dynamic-sheet-sync' ); ?></p>
+								<p class="description" style="margin:0;"><?php esc_html_e( 'Map Google Sheet columns to vehicle specs to filter inventory and show comprehensive specs on the vehicle detail page.', 'dynamic-sheet-sync' ); ?></p>
 							</div>
 							<button type="button" class="button button-secondary" id="btn-add-meta-row">+ <?php esc_html_e( 'Add Spec Column', 'dynamic-sheet-sync' ); ?></button>
 						</div>
@@ -1017,9 +1615,9 @@ class Dynamic_Sheet_Post_Sync {
 								<tr>
 									<th style="width: 22%;"><?php esc_html_e( 'Sheet Column (Header/Letter)', 'dynamic-sheet-sync' ); ?></th>
 									<th style="width: 22%;"><?php esc_html_e( 'WordPress Meta Key', 'dynamic-sheet-sync' ); ?></th>
-									<th style="width: 20%;"><?php esc_html_e( 'Card Display Label', 'dynamic-sheet-sync' ); ?></th>
+									<th style="width: 20%;"><?php esc_html_e( 'Display Label', 'dynamic-sheet-sync' ); ?></th>
 									<th style="width: 12%;"><?php esc_html_e( 'Icon / Emoji', 'dynamic-sheet-sync' ); ?></th>
-									<th style="width: 18%;"><?php esc_html_e( 'Show On Card', 'dynamic-sheet-sync' ); ?></th>
+									<th style="width: 18%;"><?php esc_html_e( 'Show On Details Page', 'dynamic-sheet-sync' ); ?></th>
 									<th style="width: 6%; text-align: center;"><?php esc_html_e( 'Action', 'dynamic-sheet-sync' ); ?></th>
 								</tr>
 							</thead>
@@ -1045,9 +1643,9 @@ class Dynamic_Sheet_Post_Sync {
 											</td>
 											<td>
 												<select name="dynamic_sheet_sync_options[custom_meta][<?php echo intval( $index ); ?>][display]">
-													<option value="primary_spec" <?php selected( $disp, 'primary_spec' ); ?>><?php esc_html_e( 'Key Spec (Card Pill)', 'dynamic-sheet-sync' ); ?></option>
-													<option value="badge" <?php selected( $disp, 'badge' ); ?>><?php esc_html_e( 'Top Image Badge', 'dynamic-sheet-sync' ); ?></option>
-													<option value="detail" <?php selected( $disp, 'detail' ); ?>><?php esc_html_e( 'Details Popup Table', 'dynamic-sheet-sync' ); ?></option>
+													<option value="primary_spec" <?php selected( $disp, 'primary_spec' ); ?>><?php esc_html_e( 'Full Specs Grid', 'dynamic-sheet-sync' ); ?></option>
+													<option value="badge" <?php selected( $disp, 'badge' ); ?>><?php esc_html_e( 'Highlight Spec', 'dynamic-sheet-sync' ); ?></option>
+													<option value="detail" <?php selected( $disp, 'detail' ); ?>><?php esc_html_e( 'Details Table', 'dynamic-sheet-sync' ); ?></option>
 													<option value="hidden" <?php selected( $disp, 'hidden' ); ?>><?php esc_html_e( 'Hidden (Meta Only)', 'dynamic-sheet-sync' ); ?></option>
 												</select>
 											</td>
@@ -1066,32 +1664,24 @@ class Dynamic_Sheet_Post_Sync {
 
 					<!-- TAB 3: SHORTCODE GENERATOR & SHOWCASE -->
 					<div class="sheet-tab-panel" id="tab-shortcodes">
-						<h3 style="margin: 0 0 8px 0; font-size: 16px;"><?php esc_html_e( 'WooCommerce-Style Vehicle Showcase Shortcodes', 'dynamic-sheet-sync' ); ?></h3>
+						<h3 style="margin: 0 0 8px 0; font-size: 16px;"><?php esc_html_e( 'Vehicle Showcase Shortcodes', 'dynamic-sheet-sync' ); ?></h3>
 						<p style="color: #64748b; font-size: 13.5px; margin-bottom: 20px;">
-							<?php esc_html_e( 'Paste these shortcodes into any page, post, or Elementor/Gutenberg block to display your live vehicle inventory catalog.', 'dynamic-sheet-sync' ); ?>
+							<?php esc_html_e( 'Paste these shortcodes into any page, post, or block editor. Cards display 9 per page with real-time pagination, multi-image slider, and links to full vehicle pages.', 'dynamic-sheet-sync' ); ?>
 						</p>
 
 						<div style="margin-bottom: 20px;">
-							<label style="font-weight: 700; display: block; margin-bottom: 4px;"><?php esc_html_e( '1. Complete Vehicle Product Grid with Search & Filters (Recommended)', 'dynamic-sheet-sync' ); ?></label>
+							<label style="font-weight: 700; display: block; margin-bottom: 4px;"><?php esc_html_e( '1. Complete Vehicle Product Grid (9 Per Page + Filter & Search)', 'dynamic-sheet-sync' ); ?></label>
 							<div class="shortcode-preview-box">
-								<code>[vehicle_products columns="3" posts_per_page="12" show_filter="yes" show_search="yes"]</code>
-								<button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('[vehicle_products columns=\'3\' posts_per_page=\'12\' show_filter=\'yes\' show_search=\'yes\']'); alert('Shortcode copied!');"><?php esc_html_e( 'Copy Shortcode', 'dynamic-sheet-sync' ); ?></button>
+								<code>[vehicle_products columns="3" per_page="9" show_filter="yes" show_search="yes"]</code>
+								<button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('[vehicle_products columns=\'3\' per_page=\'9\' show_filter=\'yes\' show_search=\'yes\']'); alert('Shortcode copied!');"><?php esc_html_e( 'Copy Shortcode', 'dynamic-sheet-sync' ); ?></button>
 							</div>
 						</div>
 
 						<div style="margin-bottom: 20px;">
-							<label style="font-weight: 700; display: block; margin-bottom: 4px;"><?php esc_html_e( '2. 4-Column Clean Product Grid (No Filters)', 'dynamic-sheet-sync' ); ?></label>
+							<label style="font-weight: 700; display: block; margin-bottom: 4px;"><?php esc_html_e( '2. 4-Column Showcase Grid', 'dynamic-sheet-sync' ); ?></label>
 							<div class="shortcode-preview-box">
-								<code>[vehicle_products columns="4" posts_per_page="8" show_filter="no" show_search="no"]</code>
-								<button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('[vehicle_products columns=\'4\' posts_per_page=\'8\' show_filter=\'no\' show_search=\'no\']'); alert('Shortcode copied!');"><?php esc_html_e( 'Copy Shortcode', 'dynamic-sheet-sync' ); ?></button>
-							</div>
-						</div>
-
-						<div style="margin-bottom: 20px;">
-							<label style="font-weight: 700; display: block; margin-bottom: 4px;"><?php esc_html_e( '3. WhatsApp Direct Inquiry Enabled Grid', 'dynamic-sheet-sync' ); ?></label>
-							<div class="shortcode-preview-box">
-								<code>[vehicle_products columns="3" whatsapp="15551234567" currency="$"]</code>
-								<button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('[vehicle_products columns=\'3\' whatsapp=\'15551234567\' currency=\'$\']'); alert('Shortcode copied!');"><?php esc_html_e( 'Copy Shortcode', 'dynamic-sheet-sync' ); ?></button>
+								<code>[vehicle_products columns="4" per_page="12" show_filter="yes" show_search="yes"]</code>
+								<button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('[vehicle_products columns=\'4\' per_page=\'12\' show_filter=\'yes\' show_search=\'yes\']'); alert('Shortcode copied!');"><?php esc_html_e( 'Copy Shortcode', 'dynamic-sheet-sync' ); ?></button>
 							</div>
 						</div>
 					</div>
@@ -1126,9 +1716,9 @@ class Dynamic_Sheet_Post_Sync {
 						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][icon]" placeholder="e.g. 🎨" style="text-align:center;" value="" /></td>' +
 						'<td>' +
 							'<select name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][display]">' +
-								'<option value="primary_spec">Key Spec (Card Pill)</option>' +
-								'<option value="badge">Top Image Badge</option>' +
-								'<option value="detail">Details Popup Table</option>' +
+								'<option value="primary_spec">Full Specs Grid</option>' +
+								'<option value="badge">Highlight Spec</option>' +
+								'<option value="detail">Details Table</option>' +
 								'<option value="hidden">Hidden (Meta Only)</option>' +
 							'</select>' +
 						'</td>' +
@@ -1192,11 +1782,13 @@ class Dynamic_Sheet_Post_Sync {
 	public function run_synchronization() {
 		$options = get_option( 'dynamic_sheet_sync_options', array() );
 
-		$csv_url        = isset( $options['csv_url'] ) ? $options['csv_url'] : '';
-		$post_type      = isset( $options['post_type'] ) ? $options['post_type'] : 'post';
-		$uid_sheet_col  = isset( $options['uid_sheet_col'] ) ? $options['uid_sheet_col'] : 'Car ID';
-		$uid_meta_key   = isset( $options['uid_meta_key'] ) ? $options['uid_meta_key'] : '_vehicle_car_id';
-		$title_template = isset( $options['title_template'] ) ? $options['title_template'] : '{Car Name} {Model} {Year}';
+		$csv_url          = isset( $options['csv_url'] ) ? $options['csv_url'] : '';
+		$post_type        = isset( $options['post_type'] ) ? $options['post_type'] : 'post';
+		$uid_sheet_col    = isset( $options['uid_sheet_col'] ) ? $options['uid_sheet_col'] : 'Car ID';
+		$uid_meta_key     = isset( $options['uid_meta_key'] ) ? $options['uid_meta_key'] : '_vehicle_car_id';
+		$title_template   = isset( $options['title_template'] ) ? $options['title_template'] : '{Car Name} {Model} {Year}';
+		$field_image_col  = isset( $options['field_image'] ) ? $options['field_image'] : 'AA';
+		$field_sub_img_col = isset( $options['field_sub_images'] ) ? $options['field_sub_images'] : 'AB';
 
 		// If critical configurations are missing, abort immediately.
 		if ( empty( $csv_url ) || empty( $uid_sheet_col ) || empty( $uid_meta_key ) ) {
@@ -1232,16 +1824,16 @@ class Dynamic_Sheet_Post_Sync {
 			return new WP_Error( 'uid_not_found', sprintf( __( 'The unique column "%s" was not found in CSV headers or columns.', 'dynamic-sheet-sync' ), $uid_sheet_col ) );
 		}
 
-		// Standard field mappings indexes.
+		// Resolve Column Indexes.
 		$content_col_header = isset( $options['field_content'] ) ? $options['field_content'] : '';
-		$image_col_header   = isset( $options['field_image'] ) ? $options['field_image'] : '';
 		$status_col_header  = isset( $options['field_status'] ) ? $options['field_status'] : '';
 		$price_col_header   = isset( $options['field_price'] ) ? $options['field_price'] : '';
 
-		$content_index = ! empty( $content_col_header ) ? self::resolve_col_index( $content_col_header, $headers ) : false;
-		$image_index   = ! empty( $image_col_header ) ? self::resolve_col_index( $image_col_header, $headers ) : false;
-		$status_index  = ! empty( $status_col_header ) ? self::resolve_col_index( $status_col_header, $headers ) : false;
-		$price_index   = ! empty( $price_col_header ) ? self::resolve_col_index( $price_col_header, $headers ) : false;
+		$content_index   = ! empty( $content_col_header ) ? self::resolve_col_index( $content_col_header, $headers ) : false;
+		$status_index    = ! empty( $status_col_header ) ? self::resolve_col_index( $status_col_header, $headers ) : false;
+		$price_index     = ! empty( $price_col_header ) ? self::resolve_col_index( $price_col_header, $headers ) : false;
+		$image_index     = self::resolve_col_index( $field_image_col, $headers );
+		$sub_image_index = self::resolve_col_index( $field_sub_img_col, $headers );
 
 		// Custom Meta mapping resolution.
 		$custom_meta_mappings = isset( $options['custom_meta'] ) && is_array( $options['custom_meta'] ) ? $options['custom_meta'] : array();
@@ -1260,13 +1852,6 @@ class Dynamic_Sheet_Post_Sync {
 		$updated_count = 0;
 		$total_rows    = 0;
 
-		// Required libraries for image sideloading.
-		if ( ! function_exists( 'media_sideload_image' ) ) {
-			require_once ABSPATH . 'wp-admin/includes/media.php';
-			require_once ABSPATH . 'wp-admin/includes/file.php';
-			require_once ABSPATH . 'wp-admin/includes/image.php';
-		}
-
 		foreach ( $lines as $line ) {
 			if ( empty( trim( $line ) ) ) {
 				continue;
@@ -1283,13 +1868,17 @@ class Dynamic_Sheet_Post_Sync {
 
 			$total_rows++;
 
-			// Build dynamic title (e.g. Car Name + Model + Year).
+			// Build dynamic title (Car Name + Model + Year as one title).
 			$post_title = self::build_dynamic_title( $title_template, $row_data, $headers, $unique_id_value );
 
 			$post_content = ( false !== $content_index && isset( $row_data[$content_index] ) ) ? wp_kses_post( trim( $row_data[$content_index] ) ) : '';
 			$post_status  = ( false !== $status_index && isset( $row_data[$status_index] ) ) ? sanitize_text_field( trim( strtolower( $row_data[$status_index] ) ) ) : 'publish';
-			$image_url    = ( false !== $image_index && isset( $row_data[$image_index] ) ) ? esc_url_raw( trim( $row_data[$image_index] ) ) : '';
 			$price_value  = ( false !== $price_index && isset( $row_data[$price_index] ) ) ? sanitize_text_field( trim( $row_data[$price_index] ) ) : '';
+
+			// Images from Column AA and AB.
+			$main_img_raw = ( false !== $image_index && isset( $row_data[$image_index] ) ) ? trim( $row_data[$image_index] ) : '';
+			$sub_imgs_raw = ( false !== $sub_image_index && isset( $row_data[$sub_image_index] ) ) ? trim( $row_data[$sub_image_index] ) : '';
+			$gallery_urls = self::parse_gallery_image_urls( $main_img_raw, $sub_imgs_raw );
 
 			// Validate post status.
 			$valid_statuses = array( 'publish', 'pending', 'draft', 'private', 'future' );
@@ -1367,17 +1956,10 @@ class Dynamic_Sheet_Post_Sync {
 					update_post_meta( $post_id, $mapping['meta_key'], $meta_value );
 				}
 
-				// Process Featured Image.
-				if ( ! empty( $image_url ) ) {
-					$cached_img = get_post_meta( $post_id, '_sideloaded_img_url', true );
-					if ( $cached_img !== $image_url ) {
-						// Download and attach featured image.
-						$img_id = media_sideload_image( $image_url, $post_id, null, 'id' );
-						if ( ! is_wp_error( $img_id ) && $img_id > 0 ) {
-							set_post_thumbnail( $post_id, $img_id );
-							update_post_meta( $post_id, '_sideloaded_img_url', $image_url );
-						}
-					}
+				// Save Gallery Images (Main + Sub Images).
+				update_post_meta( $post_id, '_vehicle_gallery', $gallery_urls );
+				if ( ! empty( $gallery_urls[0] ) ) {
+					update_post_meta( $post_id, '_vehicle_main_image', $gallery_urls[0] );
 				}
 			}
 		}
@@ -1400,24 +1982,170 @@ class Dynamic_Sheet_Post_Sync {
 	}
 
 	/**
-	 * Render WooCommerce-Style Vehicle Products Shortcode.
+	 * Filter single post content to output full vehicle information page.
+	 */
+	public function render_single_vehicle_content( $content ) {
+		if ( ! is_singular() || ! in_the_loop() || ! is_main_query() ) {
+			return $content;
+		}
+
+		$post_id   = get_the_ID();
+		$post_type = get_post_type( $post_id );
+		$options   = get_option( 'dynamic_sheet_sync_options', array() );
+		$target_pt = ! empty( $options['post_type'] ) ? $options['post_type'] : 'post';
+
+		// Only apply to the configured vehicle post type if it has vehicle metadata.
+		$car_id = get_post_meta( $post_id, '_vehicle_car_id', true );
+		if ( empty( $car_id ) && $post_type !== $target_pt ) {
+			return $content;
+		}
+
+		$car_title        = get_the_title( $post_id );
+		$price            = get_post_meta( $post_id, '_vehicle_price', true );
+		$currency         = ! empty( $options['currency_symbol'] ) ? $options['currency_symbol'] : '$';
+		$whatsapp         = ! empty( $options['whatsapp_number'] ) ? $options['whatsapp_number'] : '';
+		$custom_meta      = isset( $options['custom_meta'] ) && is_array( $options['custom_meta'] ) ? $options['custom_meta'] : array();
+		$gallery          = get_post_meta( $post_id, '_vehicle_gallery', true );
+
+		if ( ! is_array( $gallery ) || empty( $gallery ) ) {
+			$thumb = get_the_post_thumbnail_url( $post_id, 'full' );
+			$gallery = $thumb ? array( $thumb ) : array();
+		}
+
+		$main_image = ! empty( $gallery[0] ) ? $gallery[0] : '';
+
+		// Collect specs.
+		$all_specs = array();
+		foreach ( $custom_meta as $spec ) {
+			$val = get_post_meta( $post_id, $spec['meta_key'], true );
+			if ( '' !== $val && 'hidden' !== ( isset( $spec['display'] ) ? $spec['display'] : '' ) ) {
+				$all_specs[] = array(
+					'label' => $spec['label'],
+					'icon'  => ! empty( $spec['icon'] ) ? $spec['icon'] : '▪',
+					'value' => $val,
+				);
+			}
+		}
+
+		// WhatsApp URL.
+		$whatsapp_url = '';
+		if ( ! empty( $whatsapp ) ) {
+			$msg = rawurlencode( sprintf( 'Hello, I am interested in %s (Car ID: %s)', $car_title, $car_id ) );
+			$whatsapp_url = 'https://wa.me/' . preg_replace( '/[^0-9]/', '', $whatsapp ) . '?text=' . $msg;
+		}
+
+		ob_start();
+		?>
+		<div class="vehicle-single-page">
+			<div class="vehicle-single-breadcrumbs">
+				<a href="javascript:history.back()">← <?php esc_html_e( 'Back to Inventory', 'dynamic-sheet-sync' ); ?></a> &nbsp;/&nbsp; <span><?php echo esc_html( $car_title ); ?></span>
+			</div>
+
+			<div class="vehicle-single-layout">
+				<!-- Left: Gallery -->
+				<div class="vehicle-single-gallery">
+					<div class="vehicle-single-main-img-wrap">
+						<?php if ( ! empty( $main_image ) ) : ?>
+							<img src="<?php echo esc_url( $main_image ); ?>" alt="<?php echo esc_attr( $car_title ); ?>" class="vehicle-single-main-img" />
+						<?php else : ?>
+							<div class="vehicle-card-placeholder">
+								<svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+								<span style="font-size: 13px; margin-top: 6px; font-weight: 600;"><?php esc_html_e( 'Photo Coming Soon', 'dynamic-sheet-sync' ); ?></span>
+							</div>
+						<?php endif; ?>
+					</div>
+
+					<?php if ( count( $gallery ) > 1 ) : ?>
+						<div class="vehicle-single-thumbs">
+							<?php foreach ( $gallery as $g_idx => $img_url ) : ?>
+								<div class="vehicle-single-thumb <?php echo 0 === $g_idx ? 'active' : ''; ?>" data-full-src="<?php echo esc_url( $img_url ); ?>">
+									<img src="<?php echo esc_url( $img_url ); ?>" alt="<?php echo esc_attr( $car_title . ' - photo ' . ( $g_idx + 1 ) ); ?>" loading="lazy" />
+								</div>
+							<?php endforeach; ?>
+						</div>
+					<?php endif; ?>
+				</div>
+
+				<!-- Right: Details & Action -->
+				<div class="vehicle-single-info-panel">
+					<h1 class="vehicle-single-title"><?php echo esc_html( $car_title ); ?></h1>
+					<?php if ( ! empty( $car_id ) ) : ?>
+						<span class="vehicle-single-id-tag"><?php esc_html_e( 'Car ID / VIN:', 'dynamic-sheet-sync' ); ?> #<?php echo esc_html( $car_id ); ?></span>
+					<?php endif; ?>
+
+					<?php if ( ! empty( $price ) ) : ?>
+						<div class="vehicle-single-price-box">
+							<span style="font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase;"><?php esc_html_e( 'Vehicle Price', 'dynamic-sheet-sync' ); ?></span>
+							<div class="vehicle-single-price">
+								<span><?php echo esc_html( $currency ); ?></span><?php echo esc_html( number_format_i18n( floatval( preg_replace( '/[^0-9.]/', '', $price ) ) ) ); ?>
+							</div>
+						</div>
+					<?php endif; ?>
+
+					<!-- Specifications Grid -->
+					<h4 style="margin: 20px 0 10px 0; font-size: 15px; font-weight: 700; color: #1e293b;"><?php esc_html_e( 'Vehicle Specifications', 'dynamic-sheet-sync' ); ?></h4>
+					<div class="vehicle-single-specs-grid">
+						<?php if ( ! empty( $car_id ) ) : ?>
+							<div class="vehicle-single-spec-card">
+								<span class="vehicle-single-spec-icon">🆔</span>
+								<div>
+									<span class="vehicle-single-spec-label"><?php esc_html_e( 'Vehicle ID', 'dynamic-sheet-sync' ); ?></span>
+									<span class="vehicle-single-spec-val">#<?php echo esc_html( $car_id ); ?></span>
+								</div>
+							</div>
+						<?php endif; ?>
+						<?php foreach ( $all_specs as $s ) : ?>
+							<div class="vehicle-single-spec-card">
+								<span class="vehicle-single-spec-icon"><?php echo esc_html( $s['icon'] ); ?></span>
+								<div>
+									<span class="vehicle-single-spec-label"><?php echo esc_html( $s['label'] ); ?></span>
+									<span class="vehicle-single-spec-val"><?php echo esc_html( $s['value'] ); ?></span>
+								</div>
+							</div>
+						<?php endforeach; ?>
+					</div>
+
+					<!-- CTAs -->
+					<div class="vehicle-single-actions">
+						<?php if ( ! empty( $whatsapp_url ) ) : ?>
+							<a href="<?php echo esc_url( $whatsapp_url ); ?>" target="_blank" rel="noopener" class="vehicle-single-btn-whatsapp">
+								💬 <?php esc_html_e( 'Inquire via WhatsApp', 'dynamic-sheet-sync' ); ?>
+							</a>
+						<?php endif; ?>
+					</div>
+				</div>
+			</div>
+
+			<!-- Full Overview -->
+			<?php if ( ! empty( $content ) ) : ?>
+				<div class="vehicle-single-desc-section">
+					<h3><?php esc_html_e( 'Vehicle Overview & Features', 'dynamic-sheet-sync' ); ?></h3>
+					<?php echo wp_kses_post( $content ); ?>
+				</div>
+			<?php endif; ?>
+		</div>
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
+	 * Render WooCommerce-Style Vehicle Products Shortcode with 9 per page & slider.
 	 */
 	public function render_vehicle_products_shortcode( $atts ) {
 		$options = get_option( 'dynamic_sheet_sync_options', array() );
 
 		$default_pt       = ! empty( $options['post_type'] ) ? $options['post_type'] : 'post';
 		$default_currency = ! empty( $options['currency_symbol'] ) ? $options['currency_symbol'] : '$';
-		$default_whatsapp = ! empty( $options['whatsapp_number'] ) ? $options['whatsapp_number'] : '';
 		$custom_meta      = isset( $options['custom_meta'] ) && is_array( $options['custom_meta'] ) ? $options['custom_meta'] : array();
 
 		$atts = shortcode_atts( array(
 			'columns'        => '3',
-			'posts_per_page' => '12',
+			'per_page'       => '9',
+			'posts_per_page' => '-1', // Query all published vehicles so client-side filter and 9-card pagination work instantly
 			'post_type'      => $default_pt,
 			'show_filter'    => 'yes',
 			'show_search'    => 'yes',
 			'currency'       => $default_currency,
-			'whatsapp'       => $default_whatsapp,
 			'orderby'        => 'date',
 			'order'          => 'DESC',
 		), $atts, 'vehicle_products' );
@@ -1434,22 +2162,23 @@ class Dynamic_Sheet_Post_Sync {
 		$query = new WP_Query( $args );
 
 		if ( ! $query->have_posts() ) {
-			return '<div class="vehicle-grid-container"><div class="vehicle-no-results"><p>' . esc_html__( 'No vehicles available in the inventory yet.', 'dynamic-sheet-sync' ) . '</p></div></div>';
+			return '<div class="vehicle-grid-container"><div class="vehicle-no-results"><h3>' . esc_html__( 'No vehicles available in the inventory yet.', 'dynamic-sheet-sync' ) . '</h3></div></div>';
 		}
 
 		// Collect unique filter options (Fuels, Years, Transmissions).
-		$all_fuels  = array();
-		$all_years  = array();
-		$all_trans  = array();
+		$all_fuels = array();
+		$all_years = array();
+		$all_trans = array();
 
-		$cards_html  = '';
-		$modals_html = '';
+		$cards_html = '';
 
 		while ( $query->have_posts() ) {
 			$query->the_post();
 			$post_id   = get_the_ID();
 			$car_title = get_the_title();
-			$car_id    = get_post_meta( $post_id, '_vehicle_car_id', true );
+			$permalink = get_permalink( $post_id );
+
+			$car_id = get_post_meta( $post_id, '_vehicle_car_id', true );
 			if ( empty( $car_id ) ) {
 				$car_id = get_post_meta( $post_id, ( ! empty( $options['uid_meta_key'] ) ? $options['uid_meta_key'] : '_sku' ), true );
 			}
@@ -1460,13 +2189,10 @@ class Dynamic_Sheet_Post_Sync {
 				$price = get_post_meta( $post_id, '_price', true );
 			}
 
-			// Parse custom specs.
-			$primary_specs = array();
-			$detail_specs  = array();
-			$badge_val     = '';
-			$fuel_val      = '';
-			$year_val      = '';
-			$trans_val     = '';
+			// Parse custom specs for filter attributes.
+			$fuel_val  = '';
+			$year_val  = '';
+			$trans_val = '';
 
 			foreach ( $custom_meta as $spec ) {
 				$val = get_post_meta( $post_id, $spec['meta_key'], true );
@@ -1474,7 +2200,6 @@ class Dynamic_Sheet_Post_Sync {
 					continue;
 				}
 
-				// Check standard filters.
 				if ( stripos( $spec['label'], 'Fuel' ) !== false || stripos( $spec['meta_key'], 'fuel' ) !== false ) {
 					$fuel_val = $val;
 					$all_fuels[ $val ] = true;
@@ -1487,37 +2212,23 @@ class Dynamic_Sheet_Post_Sync {
 					$trans_val = $val;
 					$all_trans[ $val ] = true;
 				}
+			}
 
-				$display_mode = isset( $spec['display'] ) ? $spec['display'] : 'primary_spec';
-				if ( 'badge' === $display_mode && empty( $badge_val ) ) {
-					$badge_val = $val;
-				} elseif ( 'primary_spec' === $display_mode ) {
-					$primary_specs[] = array(
-						'label' => $spec['label'],
-						'icon'  => ! empty( $spec['icon'] ) ? $spec['icon'] : '▪',
-						'value' => $val,
-					);
-				} elseif ( 'detail' === $display_mode ) {
-					$detail_specs[] = array(
-						'label' => $spec['label'],
-						'icon'  => ! empty( $spec['icon'] ) ? $spec['icon'] : '▪',
-						'value' => $val,
-					);
+			// Get Gallery Images (Column AA + AB).
+			$gallery = get_post_meta( $post_id, '_vehicle_gallery', true );
+			if ( ! is_array( $gallery ) || empty( $gallery ) ) {
+				$main_img = get_post_meta( $post_id, '_vehicle_main_image', true );
+				if ( ! empty( $main_img ) ) {
+					$gallery = array( $main_img );
+				} else {
+					$thumb = get_the_post_thumbnail_url( $post_id, 'large' );
+					$gallery = $thumb ? array( $thumb ) : array();
 				}
 			}
 
-			// Image.
-			$thumbnail_url = get_the_post_thumbnail_url( $post_id, 'large' );
-			$modal_id = 'vehicle-modal-' . $post_id;
+			$image_count = count( $gallery );
 
-			// Inquire link.
-			$whatsapp_url = '';
-			if ( ! empty( $atts['whatsapp'] ) ) {
-				$msg = rawurlencode( sprintf( 'Hello, I am interested in vehicle %s (ID: %s)', $car_title, $car_id ) );
-				$whatsapp_url = 'https://wa.me/' . preg_replace( '/[^0-9]/', '', $atts['whatsapp'] ) . '?text=' . $msg;
-			}
-
-			// Build Card HTML.
+			// Build Card HTML with only: Image Slider, Car Name + Model + Year as one title, Price, View Details button.
 			ob_start();
 			?>
 			<div class="vehicle-card" 
@@ -1527,141 +2238,71 @@ class Dynamic_Sheet_Post_Sync {
 				data-year="<?php echo esc_attr( $year_val ); ?>" 
 				data-transmission="<?php echo esc_attr( $trans_val ); ?>">
 				
-				<!-- Card Image -->
-				<div class="vehicle-card-img-wrap">
-					<?php if ( ! empty( $badge_val ) ) : ?>
-						<span class="vehicle-badge-top"><?php echo esc_html( $badge_val ); ?></span>
-					<?php endif; ?>
-
-					<?php if ( ! empty( $car_id ) ) : ?>
-						<span class="vehicle-badge-id">#<?php echo esc_html( $car_id ); ?></span>
-					<?php endif; ?>
-
-					<?php if ( $thumbnail_url ) : ?>
-						<img src="<?php echo esc_url( $thumbnail_url ); ?>" alt="<?php echo esc_attr( $car_title ); ?>" class="vehicle-card-img" loading="lazy" />
-					<?php else : ?>
-						<div class="vehicle-card-placeholder">
-							<svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-							<span style="font-size: 11px; margin-top: 4px; font-weight: 500;"><?php esc_html_e( 'Photo Coming Soon', 'dynamic-sheet-sync' ); ?></span>
+				<!-- Card Image Slider -->
+				<div class="vehicle-card-slider-container" data-current-index="0">
+					<?php if ( $image_count > 0 ) : ?>
+						<div class="vehicle-slider-track">
+							<?php foreach ( $gallery as $idx => $img_url ) : ?>
+								<div class="vehicle-slider-slide <?php echo 0 === $idx ? 'active' : ''; ?>">
+									<a href="<?php echo esc_url( $permalink ); ?>" style="display:block; width:100%; height:100%;">
+										<img src="<?php echo esc_url( $img_url ); ?>" alt="<?php echo esc_attr( $car_title ); ?>" class="vehicle-slider-img" loading="lazy" />
+									</a>
+								</div>
+							<?php endforeach; ?>
 						</div>
+
+						<?php if ( $image_count > 1 ) : ?>
+							<!-- Navigation Buttons -->
+							<button type="button" class="vehicle-slider-btn prev" aria-label="Previous image">‹</button>
+							<button type="button" class="vehicle-slider-btn next" aria-label="Next image">›</button>
+
+							<!-- Image Counter & Indicator Dots -->
+							<div class="vehicle-slider-counter">1 / <?php echo intval( $image_count ); ?></div>
+							<div class="vehicle-slider-dots">
+								<?php for ( $i = 0; $i < min( 6, $image_count ); $i++ ) : ?>
+									<span class="vehicle-slider-dot <?php echo 0 === $i ? 'active' : ''; ?>" data-index="<?php echo intval( $i ); ?>"></span>
+								<?php endfor; ?>
+							</div>
+						<?php endif; ?>
+
+					<?php else : ?>
+						<a href="<?php echo esc_url( $permalink ); ?>" class="vehicle-card-placeholder">
+							<svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+							<span style="font-size: 11px; margin-top: 4px; font-weight: 600;"><?php esc_html_e( 'Photo Coming Soon', 'dynamic-sheet-sync' ); ?></span>
+						</a>
 					<?php endif; ?>
 				</div>
 
-				<!-- Card Body -->
+				<!-- Card Body: Title, Price, View Details Button -->
 				<div class="vehicle-card-body">
-					<div class="vehicle-card-header">
-						<h3 class="vehicle-card-title"><?php echo esc_html( $car_title ); ?></h3>
+					<div class="vehicle-card-content">
+						<h3 class="vehicle-card-title">
+							<a href="<?php echo esc_url( $permalink ); ?>">
+								<?php echo esc_html( $car_title ); ?>
+							</a>
+						</h3>
+
 						<?php if ( ! empty( $price ) ) : ?>
-							<div class="vehicle-card-price">
-								<span><?php echo esc_html( $atts['currency'] ); ?></span><?php echo esc_html( number_format_i18n( floatval( preg_replace( '/[^0-9.]/', '', $price ) ) ) ); ?>
+							<div class="vehicle-card-price-wrap">
+								<span class="vehicle-card-price-label"><?php esc_html_e( 'Price', 'dynamic-sheet-sync' ); ?>:</span>
+								<div class="vehicle-card-price">
+									<span class="currency"><?php echo esc_html( $atts['currency'] ); ?></span><?php echo esc_html( number_format_i18n( floatval( preg_replace( '/[^0-9.]/', '', $price ) ) ) ); ?>
+								</div>
 							</div>
 						<?php endif; ?>
 					</div>
 
-					<!-- Key Specs Pills -->
-					<?php if ( ! empty( $primary_specs ) ) : ?>
-						<div class="vehicle-specs-grid">
-							<?php foreach ( array_slice( $primary_specs, 0, 4 ) as $item ) : ?>
-								<div class="vehicle-spec-item">
-									<span class="vehicle-spec-icon"><?php echo esc_html( $item['icon'] ); ?></span>
-									<div>
-										<span class="vehicle-spec-label"><?php echo esc_html( $item['label'] ); ?></span>
-										<span class="vehicle-spec-val"><?php echo esc_html( $item['value'] ); ?></span>
-									</div>
-								</div>
-							<?php endforeach; ?>
-						</div>
-					<?php endif; ?>
-
-					<!-- Actions -->
-					<div class="vehicle-card-footer">
-						<button type="button" class="vehicle-btn vehicle-btn-outline btn-view-vehicle-details" data-target-modal="<?php echo esc_attr( $modal_id ); ?>">
-							🔍 <?php esc_html_e( 'View Details', 'dynamic-sheet-sync' ); ?>
-						</button>
-						<?php if ( ! empty( $whatsapp_url ) ) : ?>
-							<a href="<?php echo esc_url( $whatsapp_url ); ?>" target="_blank" rel="noopener" class="vehicle-btn vehicle-btn-whatsapp">
-								💬 <?php esc_html_e( 'Inquire', 'dynamic-sheet-sync' ); ?>
-							</a>
-						<?php else : ?>
-							<button type="button" class="vehicle-btn vehicle-btn-primary btn-view-vehicle-details" data-target-modal="<?php echo esc_attr( $modal_id ); ?>">
-								<?php esc_html_e( 'View Specs', 'dynamic-sheet-sync' ); ?>
-							</button>
-						<?php endif; ?>
+					<!-- View Details Button (Redirects to Single Vehicle Page) -->
+					<div class="vehicle-card-actions">
+						<a href="<?php echo esc_url( $permalink ); ?>" class="vehicle-btn-details">
+							<span><?php esc_html_e( 'View Details', 'dynamic-sheet-sync' ); ?></span>
+							<span class="btn-arrow">→</span>
+						</a>
 					</div>
 				</div>
 			</div>
 			<?php
 			$cards_html .= ob_get_clean();
-
-			// Build Quick View Modal HTML.
-			ob_start();
-			?>
-			<div class="vehicle-modal-backdrop" id="<?php echo esc_attr( $modal_id ); ?>">
-				<div class="vehicle-modal-content">
-					<button type="button" class="vehicle-modal-close">&times;</button>
-					
-					<?php if ( $thumbnail_url ) : ?>
-						<img src="<?php echo esc_url( $thumbnail_url ); ?>" alt="<?php echo esc_attr( $car_title ); ?>" class="vehicle-modal-img" />
-					<?php endif; ?>
-
-					<div class="vehicle-modal-body">
-						<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-							<div>
-								<h2 class="vehicle-modal-title"><?php echo esc_html( $car_title ); ?></h2>
-								<?php if ( ! empty( $car_id ) ) : ?>
-									<span style="font-size: 13px; color: #64748b; font-weight: 600;"><?php esc_html_e( 'Car ID / VIN:', 'dynamic-sheet-sync' ); ?> #<?php echo esc_html( $car_id ); ?></span>
-								<?php endif; ?>
-							</div>
-							<?php if ( ! empty( $price ) ) : ?>
-								<div class="vehicle-modal-price">
-									<span><?php echo esc_html( $atts['currency'] ); ?></span><?php echo esc_html( number_format_i18n( floatval( preg_replace( '/[^0-9.]/', '', $price ) ) ) ); ?>
-								</div>
-							<?php endif; ?>
-						</div>
-
-						<!-- Full Specifications Table -->
-						<h4 style="margin: 20px 0 10px 0; font-size: 15px; color: #1e293b;"><?php esc_html_e( 'Specifications & Features', 'dynamic-sheet-sync' ); ?></h4>
-						<table class="vehicle-modal-specs-table">
-							<tbody>
-								<?php if ( ! empty( $car_id ) ) : ?>
-									<tr>
-										<th><?php esc_html_e( 'Vehicle ID', 'dynamic-sheet-sync' ); ?></th>
-										<td><strong>#<?php echo esc_html( $car_id ); ?></strong></td>
-									</tr>
-								<?php endif; ?>
-								<?php
-								$all_specs_merged = array_merge( $primary_specs, $detail_specs );
-								foreach ( $all_specs_merged as $spec_row ) :
-									?>
-									<tr>
-										<th><?php echo esc_html( $spec_row['icon'] . ' ' . $spec_row['label'] ); ?></th>
-										<td><?php echo esc_html( $spec_row['value'] ); ?></td>
-									</tr>
-								<?php endforeach; ?>
-							</tbody>
-						</table>
-
-						<!-- Description -->
-						<?php $desc = get_the_content(); if ( ! empty( $desc ) ) : ?>
-							<div class="vehicle-modal-desc">
-								<h4 style="margin: 0 0 8px 0; font-size: 14px; color: #1e293b;"><?php esc_html_e( 'Vehicle Overview', 'dynamic-sheet-sync' ); ?></h4>
-								<?php echo wp_kses_post( wpautop( $desc ) ); ?>
-							</div>
-						<?php endif; ?>
-
-						<!-- Modal Footer Action -->
-						<div style="margin-top: 24px; display: flex; gap: 12px;">
-							<?php if ( ! empty( $whatsapp_url ) ) : ?>
-								<a href="<?php echo esc_url( $whatsapp_url ); ?>" target="_blank" rel="noopener" class="vehicle-btn vehicle-btn-whatsapp" style="flex: 2; padding: 12px;">
-									💬 <?php esc_html_e( 'Contact Seller via WhatsApp', 'dynamic-sheet-sync' ); ?>
-								</a>
-							<?php endif; ?>
-						</div>
-					</div>
-				</div>
-			</div>
-			<?php
-			$modals_html .= ob_get_clean();
 		}
 
 		wp_reset_postdata();
@@ -1669,13 +2310,15 @@ class Dynamic_Sheet_Post_Sync {
 		// Build Filter Bar HTML if enabled.
 		$filter_bar_html = '';
 		if ( 'yes' === $atts['show_filter'] || 'yes' === $atts['show_search'] ) {
-			$filter_bar_html .= '<div class="vehicle-filter-bar">';
+			$filter_bar_html .= '<div class="vehicle-filter-wrapper">';
+			$filter_bar_html .= '<div class="vehicle-filter-main-row">';
 
 			if ( 'yes' === $atts['show_search'] ) {
 				$filter_bar_html .= '
 					<div class="vehicle-search-box">
 						<span class="vehicle-search-icon">🔍</span>
 						<input type="text" class="vehicle-search-input" placeholder="' . esc_attr__( 'Search make, model, year, or Car ID...', 'dynamic-sheet-sync' ) . '" />
+						<button type="button" class="vehicle-search-clear" title="' . esc_attr__( 'Clear search', 'dynamic-sheet-sync' ) . '">&times;</button>
 					</div>
 				';
 			}
@@ -1685,35 +2328,54 @@ class Dynamic_Sheet_Post_Sync {
 
 				// Fuel Filter.
 				if ( ! empty( $all_fuels ) ) {
-					$filter_bar_html .= '<select class="vehicle-filter-select vehicle-filter-fuel"><option value="">' . esc_html__( 'All Fuel Types', 'dynamic-sheet-sync' ) . '</option>';
+					$filter_bar_html .= '
+					<div class="vehicle-select-wrap">
+						<select class="vehicle-filter-select vehicle-filter-fuel">
+							<option value="">' . esc_html__( '⛽ All Fuels', 'dynamic-sheet-sync' ) . '</option>';
 					foreach ( array_keys( $all_fuels ) as $f ) {
 						$filter_bar_html .= '<option value="' . esc_attr( $f ) . '">' . esc_html( $f ) . '</option>';
 					}
-					$filter_bar_html .= '</select>';
+					$filter_bar_html .= '</select><span class="vehicle-select-arrow">▼</span></div>';
 				}
 
 				// Year Filter.
 				if ( ! empty( $all_years ) ) {
 					krsort( $all_years );
-					$filter_bar_html .= '<select class="vehicle-filter-select vehicle-filter-year"><option value="">' . esc_html__( 'All Years', 'dynamic-sheet-sync' ) . '</option>';
+					$filter_bar_html .= '
+					<div class="vehicle-select-wrap">
+						<select class="vehicle-filter-select vehicle-filter-year">
+							<option value="">' . esc_html__( '🗓️ All Years', 'dynamic-sheet-sync' ) . '</option>';
 					foreach ( array_keys( $all_years ) as $y ) {
 						$filter_bar_html .= '<option value="' . esc_attr( $y ) . '">' . esc_html( $y ) . '</option>';
 					}
-					$filter_bar_html .= '</select>';
+					$filter_bar_html .= '</select><span class="vehicle-select-arrow">▼</span></div>';
 				}
 
 				// Transmission Filter.
 				if ( ! empty( $all_trans ) ) {
-					$filter_bar_html .= '<select class="vehicle-filter-select vehicle-filter-transmission"><option value="">' . esc_html__( 'All Transmissions', 'dynamic-sheet-sync' ) . '</option>';
+					$filter_bar_html .= '
+					<div class="vehicle-select-wrap">
+						<select class="vehicle-filter-select vehicle-filter-transmission">
+							<option value="">' . esc_html__( '🕹️ Gearbox', 'dynamic-sheet-sync' ) . '</option>';
 					foreach ( array_keys( $all_trans ) as $t ) {
 						$filter_bar_html .= '<option value="' . esc_attr( $t ) . '">' . esc_html( $t ) . '</option>';
 					}
-					$filter_bar_html .= '</select>';
+					$filter_bar_html .= '</select><span class="vehicle-select-arrow">▼</span></div>';
 				}
 
-				$filter_bar_html .= '<button type="button" class="vehicle-reset-btn">' . esc_html__( 'Reset Filters', 'dynamic-sheet-sync' ) . '</button>';
+				$filter_bar_html .= '<button type="button" class="vehicle-reset-btn">🔄 ' . esc_html__( 'Reset', 'dynamic-sheet-sync' ) . '</button>';
 				$filter_bar_html .= '</div>';
 			}
+
+			$filter_bar_html .= '</div>';
+
+			// Meta Status Row (Active chips & live result counter).
+			$filter_bar_html .= '
+				<div class="vehicle-filter-meta-bar">
+					<div class="vehicle-count-badge">' . esc_html__( 'Showing vehicles...', 'dynamic-sheet-sync' ) . '</div>
+					<div class="vehicle-active-chips"></div>
+				</div>
+			';
 
 			$filter_bar_html .= '</div>';
 		}
@@ -1725,9 +2387,13 @@ class Dynamic_Sheet_Post_Sync {
 		$output .= $filter_bar_html;
 		$output .= '<div class="vehicle-grid" style="--vg-cols: ' . esc_attr( $cols ) . ';">';
 		$output .= $cards_html;
-		$output .= '<div class="vehicle-no-results" style="display:none;"><p>' . esc_html__( 'No vehicles matched your search filter criteria.', 'dynamic-sheet-sync' ) . '</p></div>';
+		$output .= '<div class="vehicle-no-results" style="display:none;">
+			<svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+			<h3>' . esc_html__( 'No matching vehicles found', 'dynamic-sheet-sync' ) . '</h3>
+			<p>' . esc_html__( 'Try adjusting your search criteria or reset filters to see all available inventory.', 'dynamic-sheet-sync' ) . '</p>
+		</div>';
 		$output .= '</div>';
-		$output .= $modals_html;
+		$output .= '<div class="vehicle-pagination-container"></div>';
 		$output .= '</div>';
 
 		return $output;
@@ -1751,8 +2417,9 @@ function dynamic_sheet_sync_activate() {
 			'uid_sheet_col'      => 'Car ID',
 			'uid_meta_key'       => '_vehicle_car_id',
 			'title_template'     => '{Car Name} {Model} {Year}',
+			'field_image'        => 'AA',
+			'field_sub_images'   => 'AB',
 			'field_content'      => 'Description',
-			'field_image'        => 'Image URL',
 			'field_status'       => 'Status',
 			'field_price'        => 'Price',
 			'currency_symbol'    => '$',
