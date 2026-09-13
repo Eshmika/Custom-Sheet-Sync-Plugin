@@ -448,38 +448,59 @@ class Dynamic_Sheet_Post_Sync {
 			}
 			.vehicle-card-placeholder svg { width: 44px; height: 44px; fill: currentColor; }
 
-			/* Slider Navigation Controls */
+			/* Slider Navigation Controls (Creative Circular Glassmorphism Design) */
 			.vehicle-slider-btn {
 				position: absolute;
 				top: 50%;
-				transform: translateY(-50%);
-				width: 32px;
-				height: 32px;
-				background: rgba(23, 10, 61, 0.72);
-				color: #ffffff;
-				border: 1px solid rgba(255,255,255,0.25);
+				transform: translateY(-50%) scale(0.92);
+				width: 34px;
+				height: 34px;
 				border-radius: 50%;
-				display: flex;
+				background: rgba(255, 255, 255, 0.88);
+				color: #170a3d;
+				border: 1px solid rgba(255, 255, 255, 0.95);
+				display: inline-flex;
 				align-items: center;
 				justify-content: center;
 				cursor: pointer;
-				font-size: 17px;
-				line-height: 1;
-				z-index: 5;
+				z-index: 6;
 				opacity: 0;
-				transition: all 0.2s ease;
-				backdrop-filter: blur(4px);
+				box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22), 0 1px 3px rgba(0, 0, 0, 0.12);
+				backdrop-filter: blur(8px);
+				-webkit-backdrop-filter: blur(8px);
+				transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+				padding: 0;
+			}
+			.vehicle-slider-btn svg {
+				width: 15px;
+				height: 15px;
+				stroke-width: 2.6;
+				transition: transform 0.2s ease, stroke 0.2s ease;
 			}
 			.vehicle-card:hover .vehicle-slider-btn {
-				opacity: 1;
+				opacity: 0.92;
+				transform: translateY(-50%) scale(1);
 			}
 			.vehicle-slider-btn:hover {
+				opacity: 1 !important;
 				background: #3a1f62;
+				color: #ffffff;
 				border-color: #3a1f62;
-				transform: translateY(-50%) scale(1.08);
+				transform: translateY(-50%) scale(1.12);
+				box-shadow: 0 6px 18px rgba(58, 31, 98, 0.45);
 			}
-			.vehicle-slider-btn.prev { left: 8px; }
-			.vehicle-slider-btn.next { right: 8px; }
+			.vehicle-slider-btn.prev {
+				left: 10px;
+			}
+			.vehicle-slider-btn.next {
+				right: 10px;
+			}
+			.vehicle-slider-btn.prev:hover svg {
+				transform: translateX(-1.5px);
+			}
+			.vehicle-slider-btn.next:hover svg {
+				transform: translateX(1.5px);
+			}
 
 			/* Slider Counter & Dots */
 			.vehicle-slider-counter {
@@ -2498,8 +2519,12 @@ class Dynamic_Sheet_Post_Sync {
 
 						<?php if ( $image_count > 1 ) : ?>
 							<!-- Navigation Buttons -->
-							<button type="button" class="vehicle-slider-btn prev" aria-label="Previous image">‹</button>
-							<button type="button" class="vehicle-slider-btn next" aria-label="Next image">›</button>
+							<button type="button" class="vehicle-slider-btn prev" aria-label="Previous image">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+							</button>
+							<button type="button" class="vehicle-slider-btn next" aria-label="Next image">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+							</button>
 
 							<!-- Image Counter & Indicator Dots -->
 							<div class="vehicle-slider-counter">1 / <?php echo intval( $image_count ); ?></div>
