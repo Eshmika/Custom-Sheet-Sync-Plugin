@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamic Sheet to Post Type Sync & Vehicle Product Grid
  * Description: Automatically imports and syncs Google Sheet vehicle inventory into WordPress posts/products with multi-column titles, Google Drive image gallery slider (AA & AB columns), responsive creative filters, 9-card pagination, and dedicated full vehicle information pages.
- * Version: 2.1.5
+ * Version: 2.1.6
  * Author: Eshmika Hettiarachchi
  * Text Domain: dynamic-sheet-sync
  * License: GPL2
@@ -393,6 +393,7 @@ class Dynamic_Sheet_Post_Sync {
 				transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
 				box-shadow: 0 2px 10px rgba(23, 10, 61, 0.04);
 				position: relative;
+				cursor: pointer;
 			}
 			.vehicle-card:hover {
 				transform: translateY(-3px);
@@ -930,6 +931,23 @@ class Dynamic_Sheet_Post_Sync {
 							updateCardSlider($container, curr + 1);
 						} else {
 							updateCardSlider($container, curr - 1);
+						}
+					}
+				});
+
+				// Whole Vehicle Card Clickable Navigation
+				$(document).on("click", ".vehicle-card", function(e) {
+					// Do not trigger if user clicked on slider navigation buttons or dots
+					if ($(e.target).closest(".vehicle-slider-btn, .vehicle-slider-dot").length) {
+						return;
+					}
+					var url = $(this).data("url");
+					if (url) {
+						// If middle-clicked or Ctrl/Cmd pressed, open in new tab
+						if (e.ctrlKey || e.metaKey || e.which === 2) {
+							window.open(url, "_blank");
+						} else {
+							window.location.href = url;
 						}
 					}
 				});
@@ -2379,6 +2397,17 @@ class Dynamic_Sheet_Post_Sync {
 				}
 			}
 
+			// Format mileage display: append ' Km' if not already present
+			$mileage_display = '';
+			if ( ! empty( $mileage ) ) {
+				$mileage_str = trim( strval( $mileage ) );
+				if ( stripos( $mileage_str, 'km' ) !== false ) {
+					$mileage_display = $mileage_str;
+				} else {
+					$mileage_display = $mileage_str . ' Km';
+				}
+			}
+
 			// Body Style (Column M) & Condition (Column V).
 			$body_style = get_post_meta( $post_id, '_vehicle_body_style', true );
 			if ( empty( $body_style ) ) {
@@ -2410,8 +2439,8 @@ class Dynamic_Sheet_Post_Sync {
 				}
 			}
 
-			// Spec text line 2: Mileage | Body Style | Condition (plain text values only).
-			$specs_line_items = array_filter( array( $mileage, $body_style, $condition ), function( $val ) {
+			// Spec text line 2: Mileage + Km | Body Style | Condition (plain text values only).
+			$specs_line_items = array_filter( array( $mileage_display, $body_style, $condition ), function( $val ) {
 				return null !== $val && '' !== trim( strval( $val ) );
 			} );
 			$specs_line_text = implode( ' | ', $specs_line_items );
@@ -2443,7 +2472,8 @@ class Dynamic_Sheet_Post_Sync {
 				data-fuel="<?php echo esc_attr( $fuel_val ); ?>" 
 				data-year="<?php echo esc_attr( $year_val ); ?>" 
 				data-transmission="<?php echo esc_attr( $trans_val ); ?>"
-				data-mileage="<?php echo esc_attr( $mileage ); ?>">
+				data-mileage="<?php echo esc_attr( $mileage ); ?>"
+				data-url="<?php echo esc_url( $permalink ); ?>">
 				
 				<!-- Left Column: Card Image Slider -->
 				<div class="vehicle-card-slider-container" data-current-index="0">
