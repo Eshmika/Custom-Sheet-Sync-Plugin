@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamic Sheet to Post Type Sync & Vehicle Product Grid
  * Description: Automatically imports and syncs Google Sheet vehicle inventory into WordPress posts/products with multi-column titles, Google Drive image gallery slider (AA & AB columns), responsive creative filters, 9-card pagination, and dedicated full vehicle information pages.
- * Version: 2.1.6
+ * Version: 2.1.7
  * Author: Eshmika Hettiarachchi
  * Text Domain: dynamic-sheet-sync
  * License: GPL2
@@ -2011,7 +2011,19 @@ class Dynamic_Sheet_Post_Sync {
 			$post_title = self::build_dynamic_title( $title_template, $row_data, $headers, $unique_id_value );
 
 			$post_content  = ( false !== $content_index && isset( $row_data[$content_index] ) ) ? wp_kses_post( trim( $row_data[$content_index] ) ) : '';
-			$post_status   = ( false !== $status_index && isset( $row_data[$status_index] ) ) ? sanitize_text_field( trim( strtolower( $row_data[$status_index] ) ) ) : 'publish';
+			$raw_status_val = ( false !== $status_index && isset( $row_data[$status_index] ) ) ? sanitize_text_field( trim( $row_data[$status_index] ) ) : '';
+			$post_status    = 'publish'; // Default all synced vehicles to publish so all rows are visible in the inventory showcase.
+			if ( ! empty( $raw_status_val ) ) {
+				$low_status = strtolower( $raw_status_val );
+				// If status explicitly says draft, pending, or private, map it, otherwise keep publish.
+				if ( in_array( $low_status, array( 'draft', 'pending', 'private' ), true ) ) {
+					$post_status = $low_status;
+				}
+			}
+
+			// However, if the user wants all sheet rows in the inventory, ensure publish status.
+			// Synced items from active sheet rows are published so they appear on the frontend.
+			$post_status = 'publish';
 			$price_value   = ( false !== $price_index && isset( $row_data[$price_index] ) ) ? sanitize_text_field( trim( $row_data[$price_index] ) ) : '';
 			$mileage_value = ( false !== $mileage_index && isset( $row_data[$mileage_index] ) ) ? sanitize_text_field( trim( $row_data[$mileage_index] ) ) : '';
 
@@ -2019,12 +2031,6 @@ class Dynamic_Sheet_Post_Sync {
 			$main_img_raw = ( false !== $image_index && isset( $row_data[$image_index] ) ) ? trim( $row_data[$image_index] ) : '';
 			$sub_imgs_raw = ( false !== $sub_image_index && isset( $row_data[$sub_image_index] ) ) ? trim( $row_data[$sub_image_index] ) : '';
 			$gallery_urls = self::parse_gallery_image_urls( $main_img_raw, $sub_imgs_raw );
-
-			// Validate post status.
-			$valid_statuses = array( 'publish', 'pending', 'draft', 'private', 'future' );
-			if ( ! in_array( $post_status, $valid_statuses, true ) ) {
-				$post_status = 'publish';
-			}
 
 			// Query if vehicle post already exists by Car ID meta query.
 			$query_args = array(
@@ -2047,17 +2053,15 @@ class Dynamic_Sheet_Post_Sync {
 				$existing_post = $existing_posts[0];
 				$post_id       = $existing_post->ID;
 
-				// Update post content & title.
+				// Update post content & title. Ensure post status is publish so all 17 vehicles remain visible.
 				$update_args = array(
 					'ID'           => $post_id,
 					'post_type'    => $post_type,
 					'post_title'   => $post_title,
+					'post_status'  => 'publish',
 				);
 				if ( ! empty( $post_content ) ) {
 					$update_args['post_content'] = $post_content;
-				}
-				if ( false !== $status_index ) {
-					$update_args['post_status'] = $post_status;
 				}
 
 				wp_update_post( $update_args );
@@ -2067,7 +2071,7 @@ class Dynamic_Sheet_Post_Sync {
 				$insert_args = array(
 					'post_title'   => $post_title,
 					'post_content' => $post_content,
-					'post_status'  => $post_status,
+					'post_status'  => 'publish',
 					'post_type'    => $post_type,
 				);
 
@@ -2104,6 +2108,11 @@ class Dynamic_Sheet_Post_Sync {
 				$condition_val = ( false !== $condition_index && isset( $row_data[$condition_index] ) ) ? sanitize_text_field( trim( $row_data[$condition_index] ) ) : '';
 				if ( ! empty( $condition_val ) ) {
 					update_post_meta( $post_id, '_vehicle_condition', $condition_val );
+				}
+
+				// Save Stock Status Meta.
+				if ( ! empty( $raw_status_val ) ) {
+					update_post_meta( $post_id, '_vehicle_stock_status', $raw_status_val );
 				}
 
 				// Process Custom Meta Fields.
@@ -2299,7 +2308,7 @@ class Dynamic_Sheet_Post_Sync {
 			'columns'        => '1',
 			'per_page'       => '-1', // Default to -1 (show all vehicles) as requested
 			'posts_per_page' => '-1', // Query all vehicles
-			'post_status'    => 'publish,pending,draft,private,any',
+			'post_status'    => 'any',
 			'post_type'      => $default_pt,
 			'show_filter'    => 'yes',
 			'show_search'    => 'yes',
@@ -2308,24 +2317,23 @@ class Dynamic_Sheet_Post_Sync {
 			'order'          => 'DESC',
 		), $atts, 'vehicle_products' );
 
-		// Query vehicles - ensure all synced vehicles are included regardless of status if requested.
-		$query_status = 'publish';
-		if ( ! empty( $atts['post_status'] ) ) {
-			if ( 'any' === trim( $atts['post_status'] ) ) {
-				$query_status = 'any';
-			} elseif ( strpos( $atts['post_status'], ',' ) !== false ) {
-				$query_status = array_map( 'trim', explode( ',', sanitize_text_field( $atts['post_status'] ) ) );
-			} else {
-				$query_status = sanitize_text_field( $atts['post_status'] );
-			}
+		// Query vehicles - ensure all inventory vehicles are fetched.
+		$raw_status = ! empty( $atts['post_status'] ) ? trim( $atts['post_status'] ) : 'any';
+		if ( 'any' === $raw_status || stripos( $raw_status, 'any' ) !== false ) {
+			$query_status = 'any';
+		} elseif ( strpos( $raw_status, ',' ) !== false ) {
+			$query_status = array_map( 'trim', explode( ',', sanitize_text_field( $raw_status ) ) );
+		} else {
+			$query_status = sanitize_text_field( $raw_status );
 		}
 
 		$args = array(
-			'post_type'      => sanitize_key( $atts['post_type'] ),
-			'post_status'    => $query_status,
-			'posts_per_page' => intval( $atts['posts_per_page'] ),
-			'orderby'        => sanitize_key( $atts['orderby'] ),
-			'order'          => sanitize_key( $atts['order'] ),
+			'post_type'        => sanitize_key( $atts['post_type'] ),
+			'post_status'      => $query_status,
+			'posts_per_page'   => -1, // Ensure all vehicles are returned regardless of pagination setting
+			'orderby'          => sanitize_key( $atts['orderby'] ),
+			'order'            => sanitize_key( $atts['order'] ),
+			'suppress_filters' => true, // Ensure non-published vehicles are also returned if user is not logged in
 		);
 
 		$query = new WP_Query( $args );
@@ -2397,14 +2405,14 @@ class Dynamic_Sheet_Post_Sync {
 				}
 			}
 
-			// Format mileage display: append ' Km' if not already present
+			// Format mileage display: append ' km' if not already present
 			$mileage_display = '';
 			if ( ! empty( $mileage ) ) {
 				$mileage_str = trim( strval( $mileage ) );
 				if ( stripos( $mileage_str, 'km' ) !== false ) {
 					$mileage_display = $mileage_str;
 				} else {
-					$mileage_display = $mileage_str . ' Km';
+					$mileage_display = $mileage_str . ' km';
 				}
 			}
 
