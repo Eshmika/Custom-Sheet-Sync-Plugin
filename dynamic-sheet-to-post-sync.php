@@ -2360,12 +2360,6 @@ class Dynamic_Sheet_Post_Sync {
 				
 				<!-- Card Image Slider -->
 				<div class="vehicle-card-slider-container" data-current-index="0">
-					<?php if ( ! empty( $mileage ) ) : ?>
-						<div class="vehicle-card-mileage-badge">
-							<span class="badge-text"><?php echo esc_html( $mileage ); ?></span>
-						</div>
-					<?php endif; ?>
-
 					<?php if ( $image_count > 0 ) : ?>
 						<div class="vehicle-slider-track">
 							<?php foreach ( $gallery as $idx => $img_url ) : ?>
