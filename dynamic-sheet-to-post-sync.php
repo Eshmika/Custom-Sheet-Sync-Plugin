@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamic Sheet to Post Type Sync & Vehicle Product Grid
  * Description: Automatically imports and syncs Google Sheet vehicle inventory into WordPress posts/products with multi-column titles, Google Drive image gallery slider (AA & AB columns), responsive creative filters, 9-card pagination, and dedicated full vehicle information pages.
- * Version: 2.1.2
+ * Version: 2.1.3
  * Author: Eshmika Hettiarachchi
  * Text Domain: dynamic-sheet-sync
  * License: GPL2
@@ -100,21 +100,22 @@ class Dynamic_Sheet_Post_Sync {
 		// Creative, Responsive Vehicle Showroom Styles.
 		wp_add_inline_style( 'dynamic-vehicle-grid-css', '
 			:root {
-				--vg-primary: #2563eb;
-				--vg-primary-hover: #1d4ed8;
-				--vg-accent: #059669;
-				--vg-text-main: #0f172a;
-				--vg-text-muted: #64748b;
-				--vg-bg: #f8fafc;
+				--vg-primary: #3a1f62;
+				--vg-primary-dark: #170a3d;
+				--vg-primary-hover: #26114e;
+				--vg-accent: #5e359a;
+				--vg-text-main: #170a3d;
+				--vg-text-muted: #6b637d;
+				--vg-bg: #ffffff;
 				--vg-card-bg: #ffffff;
-				--vg-border: #e2e8f0;
-				--vg-border-focus: #3b82f6;
+				--vg-border: #e8e5ef;
+				--vg-border-focus: #3a1f62;
 				--vg-radius-lg: 16px;
 				--vg-radius-md: 10px;
 				--vg-radius-sm: 6px;
-				--vg-shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-				--vg-shadow-md: 0 4px 14px -2px rgba(15,23,42,0.08), 0 2px 6px -2px rgba(15,23,42,0.04);
-				--vg-shadow-hover: 0 20px 25px -5px rgba(15,23,42,0.12), 0 8px 10px -6px rgba(15,23,42,0.06);
+				--vg-shadow-sm: 0 2px 8px rgba(23, 10, 61, 0.04), 0 1px 2px rgba(23, 10, 61, 0.02);
+				--vg-shadow-md: 0 8px 24px -4px rgba(23, 10, 61, 0.07), 0 2px 8px -2px rgba(23, 10, 61, 0.03);
+				--vg-shadow-hover: 0 20px 30px -6px rgba(23, 10, 61, 0.12), 0 8px 12px -4px rgba(23, 10, 61, 0.05);
 			}
 
 			.vehicle-grid-container {
@@ -128,74 +129,96 @@ class Dynamic_Sheet_Post_Sync {
 			.vehicle-grid-container * { box-sizing: border-box; }
 
 			/* ==========================================================================
-			   CREATIVE & RESPONSIVE FILTER BAR
+			   MODERN CREATIVE FILTER BAR (Clean White, Deep Purple Accent)
 			   ========================================================================== */
 			.vehicle-filter-wrapper {
-				background: linear-gradient(145deg, #ffffff, #f8fafc);
+				background: #ffffff;
 				border: 1px solid var(--vg-border);
 				border-radius: var(--vg-radius-lg);
-				padding: 20px 24px;
-				margin-bottom: 30px;
+				padding: 22px 26px;
+				margin-bottom: 32px;
 				box-shadow: var(--vg-shadow-md);
 				position: relative;
+				transition: border-color 0.25s ease, box-shadow 0.25s ease;
+			}
+			.vehicle-filter-wrapper::before {
+				content: "";
+				position: absolute;
+				top: 0;
+				left: 24px;
+				right: 24px;
+				height: 3px;
+				background: linear-gradient(90deg, #170a3d 0%, #3a1f62 60%, rgba(58, 31, 98, 0.1) 100%);
+				border-radius: 3px 3px 0 0;
 			}
 			.vehicle-filter-main-row {
 				display: flex;
 				flex-wrap: wrap;
-				gap: 14px;
+				gap: 12px;
 				align-items: center;
 				justify-content: space-between;
 			}
 			.vehicle-search-box {
 				position: relative;
-				flex: 1 1 280px;
+				flex: 1 1 290px;
 				min-width: 240px;
+			}
+			.vehicle-search-svg {
+				position: absolute;
+				left: 15px;
+				top: 50%;
+				transform: translateY(-50%);
+				pointer-events: none;
+				transition: color 0.2s ease;
 			}
 			.vehicle-search-input {
 				width: 100%;
-				height: 46px;
-				padding: 10px 40px 10px 42px;
+				height: 48px;
+				padding: 10px 42px 10px 44px;
 				border: 1.5px solid var(--vg-border);
 				border-radius: var(--vg-radius-md);
-				font-size: 14.5px;
+				font-size: 14px;
+				font-weight: 500;
 				color: var(--vg-text-main);
 				background: #ffffff;
 				outline: none;
 				transition: all 0.25s ease;
 			}
-			.vehicle-search-input:focus {
-				border-color: var(--vg-primary);
-				box-shadow: 0 0 0 4px rgba(37,99,235,0.12);
+			.vehicle-search-input::placeholder {
+				color: #9b94a8;
+				font-weight: 400;
 			}
-			.vehicle-search-icon {
-				position: absolute;
-				left: 14px;
-				top: 50%;
-				transform: translateY(-50%);
-				color: var(--vg-text-muted);
-				font-size: 16px;
-				pointer-events: none;
+			.vehicle-search-input:focus {
+				border-color: #3a1f62;
+				background: #ffffff;
+				box-shadow: 0 0 0 3px rgba(58, 31, 98, 0.12);
 			}
 			.vehicle-search-clear {
 				position: absolute;
 				right: 12px;
 				top: 50%;
 				transform: translateY(-50%);
-				background: #e2e8f0;
-				color: #475569;
+				background: #f1eef8;
+				color: #5c5470;
 				border: none;
 				width: 22px;
 				height: 22px;
 				border-radius: 50%;
-				font-size: 13px;
-				line-height: 1;
 				cursor: pointer;
 				display: none;
 				align-items: center;
 				justify-content: center;
-				transition: 0.2s;
+				transition: all 0.2s ease;
+				padding: 0;
 			}
-			.vehicle-search-clear:hover { background: #cbd5e1; color: #0f172a; }
+			.vehicle-search-clear:hover {
+				background: #3a1f62;
+				color: #ffffff;
+			}
+			.vehicle-search-clear svg {
+				width: 11px;
+				height: 11px;
+			}
 
 			.vehicle-filter-controls {
 				display: flex;
@@ -205,17 +228,17 @@ class Dynamic_Sheet_Post_Sync {
 			}
 			.vehicle-select-wrap {
 				position: relative;
-				min-width: 135px;
+				min-width: 145px;
 			}
 			.vehicle-filter-select {
 				width: 100%;
-				height: 46px;
-				padding: 8px 32px 8px 14px;
+				height: 48px;
+				padding: 8px 34px 8px 14px;
 				border: 1.5px solid var(--vg-border);
 				border-radius: var(--vg-radius-md);
 				font-size: 13.5px;
-				font-weight: 500;
-				color: var(--vg-text-main);
+				font-weight: 600;
+				color: #170a3d;
 				background-color: #ffffff;
 				cursor: pointer;
 				outline: none;
@@ -223,79 +246,123 @@ class Dynamic_Sheet_Post_Sync {
 				-webkit-appearance: none;
 				transition: all 0.2s ease;
 			}
+			.vehicle-filter-select:hover {
+				border-color: #d2cbe0;
+			}
 			.vehicle-filter-select:focus {
-				border-color: var(--vg-primary);
-				box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+				border-color: #3a1f62;
+				box-shadow: 0 0 0 3px rgba(58, 31, 98, 0.12);
 			}
 			.vehicle-select-arrow {
 				position: absolute;
-				right: 12px;
+				right: 13px;
 				top: 50%;
 				transform: translateY(-50%);
 				pointer-events: none;
-				color: var(--vg-text-muted);
-				font-size: 10px;
+				color: #6b637d;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				transition: transform 0.2s ease, color 0.2s ease;
+			}
+			.vehicle-select-wrap:hover .vehicle-select-arrow {
+				color: #3a1f62;
 			}
 			.vehicle-reset-btn {
-				height: 46px;
+				height: 48px;
 				padding: 0 18px;
-				background: #f1f5f9;
-				color: #475569;
-				border: 1.5px solid var(--vg-border);
+				background: #ffffff;
+				color: #3a1f62;
+				border: 1.5px solid #dfd8ec;
 				border-radius: var(--vg-radius-md);
-				font-size: 13.5px;
-				font-weight: 600;
+				font-size: 13px;
+				font-weight: 700;
 				cursor: pointer;
 				display: inline-flex;
 				align-items: center;
-				gap: 6px;
-				transition: all 0.2s ease;
+				gap: 7px;
+				letter-spacing: 0.2px;
+				transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+			}
+			.vehicle-reset-btn svg {
+				width: 14px;
+				height: 14px;
+				transition: transform 0.3s ease;
 			}
 			.vehicle-reset-btn:hover {
-				background: #e2e8f0;
-				color: #0f172a;
-				border-color: #cbd5e1;
+				background: #170a3d;
+				color: #ffffff;
+				border-color: #170a3d;
+				box-shadow: 0 4px 12px rgba(23, 10, 61, 0.18);
+			}
+			.vehicle-reset-btn:hover svg {
+				transform: rotate(-90deg);
 			}
 
 			.vehicle-filter-meta-bar {
 				display: flex;
 				justify-content: space-between;
 				align-items: center;
-				margin-top: 14px;
-				padding-top: 14px;
-				border-top: 1px solid var(--vg-border);
+				margin-top: 16px;
+				padding-top: 15px;
+				border-top: 1px solid #f1eef6;
 				font-size: 13px;
 				color: var(--vg-text-muted);
 			}
 			.vehicle-count-badge {
-				font-weight: 600;
-				color: var(--vg-text-main);
+				font-weight: 700;
+				color: #170a3d;
+				display: inline-flex;
+				align-items: center;
+				gap: 7px;
+			}
+			.vehicle-count-badge::before {
+				content: "";
+				display: inline-block;
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				background: #3a1f62;
 			}
 			.vehicle-active-chips {
 				display: flex;
 				flex-wrap: wrap;
-				gap: 6px;
+				gap: 7px;
 				align-items: center;
 			}
 			.vehicle-chip {
-				background: #eff6ff;
-				color: #1d4ed8;
-				border: 1px solid #bfdbfe;
-				padding: 3px 10px;
+				background: #f8f6fc;
+				color: #170a3d;
+				border: 1px solid #dfd8ec;
+				padding: 4px 11px;
 				border-radius: 20px;
 				font-size: 12px;
 				font-weight: 600;
 				display: inline-flex;
 				align-items: center;
-				gap: 5px;
+				gap: 6px;
+				transition: all 0.2s ease;
 			}
 			.vehicle-chip-remove {
 				cursor: pointer;
-				font-size: 14px;
-				line-height: 1;
-				color: #3b82f6;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				width: 15px;
+				height: 15px;
+				border-radius: 50%;
+				color: #6b637d;
+				transition: all 0.2s ease;
 			}
-			.vehicle-chip-remove:hover { color: #1e40af; }
+			.vehicle-chip-remove:hover {
+				background: #3a1f62;
+				color: #ffffff;
+			}
+			.vehicle-chip-remove svg {
+				width: 9px;
+				height: 9px;
+				stroke-width: 2.5;
+			}
 
 			/* ==========================================================================
 			   VEHICLE PRODUCT GRID (9 PER PAGE)
@@ -543,8 +610,8 @@ class Dynamic_Sheet_Post_Sync {
 				display: inline-flex;
 				align-items: center;
 				gap: 6px;
-				background: #eff6ff;
-				border: 1px solid #bfdbfe;
+				background: #fbf9fd;
+				border: 1px solid #dfd8ec;
 				padding: 6px 12px;
 				border-radius: 8px;
 				font-size: 15px;
@@ -553,7 +620,7 @@ class Dynamic_Sheet_Post_Sync {
 			.vehicle-card-price-label {
 				font-size: 15px;
 				font-weight: 700;
-				color: #1e40af;
+				color: #3a1f62;
 				text-transform: none;
 				letter-spacing: 0;
 			}
@@ -562,7 +629,7 @@ class Dynamic_Sheet_Post_Sync {
 				align-items: baseline;
 				font-size: 15px;
 				font-weight: 800;
-				color: #1d4ed8;
+				color: #170a3d;
 				letter-spacing: -0.2px;
 			}
 			.vehicle-card-price .currency {
@@ -583,7 +650,7 @@ class Dynamic_Sheet_Post_Sync {
 				justify-content: center;
 				gap: 8px;
 				padding: 11px 18px;
-				background: linear-gradient(135deg, var(--vg-primary) 0%, var(--vg-primary-hover) 100%);
+				background: linear-gradient(135deg, #3a1f62 0%, #170a3d 100%);
 				color: #ffffff !important;
 				font-size: 14px;
 				font-weight: 700;
@@ -591,15 +658,15 @@ class Dynamic_Sheet_Post_Sync {
 				text-decoration: none !important;
 				border: none;
 				cursor: pointer;
-				box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22);
+				box-shadow: 0 4px 12px rgba(23, 10, 61, 0.22);
 				transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 			}
 			.vehicle-btn-details .btn-arrow {
 				transition: transform 0.25s ease;
 			}
 			.vehicle-btn-details:hover {
-				background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-				box-shadow: 0 6px 18px rgba(37, 99, 235, 0.38);
+				background: linear-gradient(135deg, #4d2b80 0%, #26114e 100%);
+				box-shadow: 0 6px 18px rgba(23, 10, 61, 0.35);
 				transform: translateY(-1px);
 			}
 			.vehicle-btn-details:hover .btn-arrow {
@@ -636,15 +703,15 @@ class Dynamic_Sheet_Post_Sync {
 				text-decoration: none;
 			}
 			.vehicle-page-btn:hover:not(.disabled):not(.active) {
-				background: #f1f5f9;
-				border-color: #cbd5e1;
-				color: var(--vg-primary);
+				background: #fbf9fd;
+				border-color: #d2cbe0;
+				color: #3a1f62;
 			}
 			.vehicle-page-btn.active {
-				background: var(--vg-primary);
-				border-color: var(--vg-primary);
+				background: linear-gradient(135deg, #3a1f62 0%, #170a3d 100%);
+				border-color: #170a3d;
 				color: #ffffff;
-				box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+				box-shadow: 0 4px 10px rgba(23, 10, 61, 0.25);
 			}
 			.vehicle-page-btn.disabled {
 				opacity: 0.45;
@@ -1035,17 +1102,19 @@ class Dynamic_Sheet_Post_Sync {
 					var trans = $(".vehicle-filter-transmission").val();
 					var search = $(".vehicle-search-input").val();
 
+					var closeSvg = "<svg viewBox=\\"0 0 24 24\\" width=\\"9\\" height=\\"9\\" fill=\\"none\\" stroke=\\"currentColor\\" stroke-width=\\"2.5\\" stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\"><line x1=\\"18\\" y1=\\"6\\" x2=\\"6\\" y2=\\"18\\"></line><line x1=\\"6\\" y1=\\"6\\" x2=\\"18\\" y2=\\"18\\"></line></svg>";
+
 					if (search) {
-						$chipsContainer.append("<span class=\"vehicle-chip\">Search: " + search + " <span class=\"vehicle-chip-remove\" data-target=\"search\">&times;</span></span>");
+						$chipsContainer.append("<span class=\\"vehicle-chip\\">Search: " + search + " <span class=\\"vehicle-chip-remove\\" data-target=\\"search\\" title=\\"Remove search filter\\">" + closeSvg + "</span></span>");
 					}
 					if (fuel) {
-						$chipsContainer.append("<span class=\"vehicle-chip\">Fuel: " + fuel + " <span class=\"vehicle-chip-remove\" data-target=\"fuel\">&times;</span></span>");
+						$chipsContainer.append("<span class=\\"vehicle-chip\\">Fuel: " + fuel + " <span class=\\"vehicle-chip-remove\\" data-target=\\"fuel\\" title=\\"Remove fuel filter\\">" + closeSvg + "</span></span>");
 					}
 					if (year) {
-						$chipsContainer.append("<span class=\"vehicle-chip\">Year: " + year + " <span class=\"vehicle-chip-remove\" data-target=\"year\">&times;</span></span>");
+						$chipsContainer.append("<span class=\\"vehicle-chip\\">Year: " + year + " <span class=\\"vehicle-chip-remove\\" data-target=\\"year\\" title=\\"Remove year filter\\">" + closeSvg + "</span></span>");
 					}
 					if (trans) {
-						$chipsContainer.append("<span class=\"vehicle-chip\">Trans: " + trans + " <span class=\"vehicle-chip-remove\" data-target=\"trans\">&times;</span></span>");
+						$chipsContainer.append("<span class=\\"vehicle-chip\\">Trans: " + trans + " <span class=\\"vehicle-chip-remove\\" data-target=\\"trans\\" title=\\"Remove transmission filter\\">" + closeSvg + "</span></span>");
 					}
 				}
 
@@ -2443,15 +2512,19 @@ class Dynamic_Sheet_Post_Sync {
 			if ( 'yes' === $atts['show_search'] ) {
 				$filter_bar_html .= '
 					<div class="vehicle-search-box">
-						<svg class="vehicle-search-svg" viewBox="0 0 24 24" width="16" height="16" style="flex-shrink:0; fill:#94a3b8;"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+						<svg class="vehicle-search-svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#6b637d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
 						<input type="text" class="vehicle-search-input" placeholder="' . esc_attr__( 'Search make, model, year, or Car ID...', 'dynamic-sheet-sync' ) . '" />
-						<button type="button" class="vehicle-search-clear" title="' . esc_attr__( 'Clear search', 'dynamic-sheet-sync' ) . '">&times;</button>
+						<button type="button" class="vehicle-search-clear" title="' . esc_attr__( 'Clear search', 'dynamic-sheet-sync' ) . '">
+							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+						</button>
 					</div>
 				';
 			}
 
 			if ( 'yes' === $atts['show_filter'] ) {
 				$filter_bar_html .= '<div class="vehicle-filter-controls">';
+
+				$select_arrow_svg = '<span class="vehicle-select-arrow"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>';
 
 				// Fuel Filter.
 				if ( ! empty( $all_fuels ) ) {
@@ -2462,7 +2535,7 @@ class Dynamic_Sheet_Post_Sync {
 					foreach ( array_keys( $all_fuels ) as $f ) {
 						$filter_bar_html .= '<option value="' . esc_attr( $f ) . '">' . esc_html( $f ) . '</option>';
 					}
-					$filter_bar_html .= '</select><span class="vehicle-select-arrow">▼</span></div>';
+					$filter_bar_html .= '</select>' . $select_arrow_svg . '</div>';
 				}
 
 				// Year Filter.
@@ -2475,7 +2548,7 @@ class Dynamic_Sheet_Post_Sync {
 					foreach ( array_keys( $all_years ) as $y ) {
 						$filter_bar_html .= '<option value="' . esc_attr( $y ) . '">' . esc_html( $y ) . '</option>';
 					}
-					$filter_bar_html .= '</select><span class="vehicle-select-arrow">▼</span></div>';
+					$filter_bar_html .= '</select>' . $select_arrow_svg . '</div>';
 				}
 
 				// Transmission Filter.
@@ -2487,10 +2560,14 @@ class Dynamic_Sheet_Post_Sync {
 					foreach ( array_keys( $all_trans ) as $t ) {
 						$filter_bar_html .= '<option value="' . esc_attr( $t ) . '">' . esc_html( $t ) . '</option>';
 					}
-					$filter_bar_html .= '</select><span class="vehicle-select-arrow">▼</span></div>';
+					$filter_bar_html .= '</select>' . $select_arrow_svg . '</div>';
 				}
 
-				$filter_bar_html .= '<button type="button" class="vehicle-reset-btn">' . esc_html__( 'Reset Filters', 'dynamic-sheet-sync' ) . '</button>';
+				$filter_bar_html .= '
+					<button type="button" class="vehicle-reset-btn">
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+						<span>' . esc_html__( 'Reset Filters', 'dynamic-sheet-sync' ) . '</span>
+					</button>';
 				$filter_bar_html .= '</div>';
 			}
 
