@@ -453,61 +453,128 @@ class Dynamic_Sheet_Post_Sync {
 			}
 
 			/* ==========================================================================
-			   STREAMLINED CARD BODY (Title, Price, View Details only)
+			   MODERN CREATIVE VEHICLE CARD BODY
 			   ========================================================================== */
 			.vehicle-card-body {
-				padding: 20px 22px 22px;
+				padding: 18px 20px 20px;
 				display: flex;
 				flex-direction: column;
 				flex: 1;
 				justify-content: space-between;
+				background: linear-gradient(180deg, #ffffff 0%, #fafcff 100%);
 			}
 			.vehicle-card-content {
-				margin-bottom: 18px;
+				margin-bottom: 16px;
 			}
 			.vehicle-card-title {
-				font-size: 18px;
+				font-size: 16px;
 				font-weight: 700;
 				color: var(--vg-text-main);
 				margin: 0 0 10px 0;
-				line-height: 1.35;
+				line-height: 1.38;
 				letter-spacing: -0.2px;
 			}
 			.vehicle-card-title a {
 				color: inherit;
 				text-decoration: none;
+				font-weight: 700;
 				transition: color 0.2s ease;
 			}
 			.vehicle-card-title a:hover {
 				color: var(--vg-primary);
 			}
+
+			/* Modern Creative Mileage Floating Badge */
+			.vehicle-card-mileage-badge {
+				position: absolute;
+				top: 12px;
+				left: 12px;
+				background: rgba(15, 23, 42, 0.78);
+				backdrop-filter: blur(8px);
+				-webkit-backdrop-filter: blur(8px);
+				color: #ffffff;
+				font-size: 12px;
+				font-weight: 700;
+				padding: 4px 10px;
+				border-radius: 20px;
+				display: inline-flex;
+				align-items: center;
+				gap: 5px;
+				box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+				border: 1px solid rgba(255,255,255,0.22);
+				z-index: 4;
+				letter-spacing: 0.3px;
+			}
+			.vehicle-card-mileage-badge .badge-icon {
+				font-size: 11px;
+			}
+
+			/* Modern Creative Mileage Card Spec Row */
+			.vehicle-card-mileage-row {
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				background: #f1f5f9;
+				border: 1px solid #e2e8f0;
+				padding: 5px 10px;
+				border-radius: 8px;
+				margin-bottom: 12px;
+				font-size: 13px;
+				color: #334155;
+				font-weight: 600;
+			}
+			.vehicle-card-mileage-row .vehicle-mileage-icon {
+				font-size: 13px;
+			}
+			.vehicle-card-mileage-row .vehicle-mileage-label {
+				font-weight: 600;
+				color: #64748b;
+				font-size: 12px;
+				text-transform: uppercase;
+				letter-spacing: 0.4px;
+			}
+			.vehicle-card-mileage-row .vehicle-mileage-val {
+				font-weight: 700;
+				color: #0f172a;
+			}
+
+			/* Modern Vehicle Price Wrap (15px desktop, 13px mobile, uniform size) */
 			.vehicle-card-price-wrap {
-				display: flex;
-				align-items: baseline;
-				gap: 4px;
+				display: inline-flex;
+				align-items: center;
+				gap: 6px;
+				background: #eff6ff;
+				border: 1px solid #bfdbfe;
+				padding: 6px 12px;
+				border-radius: 8px;
+				font-size: 15px;
+				line-height: 1.3;
 			}
 			.vehicle-card-price-label {
-				font-size: 12px;
-				font-weight: 600;
-				text-transform: uppercase;
-				letter-spacing: 0.5px;
-				color: var(--vg-text-muted);
+				font-size: 15px;
+				font-weight: 700;
+				color: #1e40af;
+				text-transform: none;
+				letter-spacing: 0;
 			}
 			.vehicle-card-price {
-				font-size: 22px;
+				display: inline-flex;
+				align-items: baseline;
+				font-size: 15px;
 				font-weight: 800;
-				color: var(--vg-primary);
-				letter-spacing: -0.5px;
+				color: #1d4ed8;
+				letter-spacing: -0.2px;
 			}
 			.vehicle-card-price .currency {
-				font-size: 16px;
-				font-weight: 700;
+				font-size: 15px;
+				font-weight: 800;
 				margin-right: 2px;
 			}
 
 			/* Card Action Button */
 			.vehicle-card-actions {
 				margin-top: auto;
+				padding-top: 6px;
 			}
 			.vehicle-btn-details {
 				width: 100%;
@@ -515,7 +582,7 @@ class Dynamic_Sheet_Post_Sync {
 				align-items: center;
 				justify-content: center;
 				gap: 8px;
-				padding: 12px 18px;
+				padding: 11px 18px;
 				background: linear-gradient(135deg, var(--vg-primary) 0%, var(--vg-primary-hover) 100%);
 				color: #ffffff !important;
 				font-size: 14px;
@@ -524,7 +591,7 @@ class Dynamic_Sheet_Post_Sync {
 				text-decoration: none !important;
 				border: none;
 				cursor: pointer;
-				box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+				box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22);
 				transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 			}
 			.vehicle-btn-details .btn-arrow {
@@ -532,7 +599,7 @@ class Dynamic_Sheet_Post_Sync {
 			}
 			.vehicle-btn-details:hover {
 				background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-				box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+				box-shadow: 0 6px 18px rgba(37, 99, 235, 0.38);
 				transform: translateY(-1px);
 			}
 			.vehicle-btn-details:hover .btn-arrow {
@@ -601,6 +668,27 @@ class Dynamic_Sheet_Post_Sync {
 			}
 			.vehicle-no-results svg { width: 56px; height: 56px; fill: #94a3b8; margin-bottom: 12px; }
 			.vehicle-no-results h3 { font-size: 18px; color: var(--vg-text-main); margin: 0 0 6px 0; }
+
+			/* Responsive mobile styling for vehicle card */
+			@media (max-width: 640px) {
+				.vehicle-card-title {
+					font-size: 14px !important;
+					font-weight: 700 !important;
+				}
+				.vehicle-card-price-wrap,
+				.vehicle-card-price-label,
+				.vehicle-card-price,
+				.vehicle-card-price .currency {
+					font-size: 13px !important;
+				}
+				.vehicle-card-mileage-row {
+					font-size: 12px;
+					padding: 4px 8px;
+				}
+				.vehicle-card-body {
+					padding: 14px 16px 16px;
+				}
+			}
 
 			/* ==========================================================================
 			   FULL VEHICLE INFORMATION SINGLE PAGE
@@ -1146,6 +1234,9 @@ class Dynamic_Sheet_Post_Sync {
 		if ( isset( $input['field_price'] ) ) {
 			$output['field_price'] = sanitize_text_field( trim( $input['field_price'] ) );
 		}
+		if ( isset( $input['field_mileage'] ) ) {
+			$output['field_mileage'] = sanitize_text_field( trim( $input['field_mileage'] ) );
+		}
 		if ( isset( $input['currency_symbol'] ) ) {
 			$output['currency_symbol'] = sanitize_text_field( trim( $input['currency_symbol'] ) );
 		}
@@ -1396,6 +1487,7 @@ class Dynamic_Sheet_Post_Sync {
 		$field_content    = isset( $options['field_content'] ) ? $options['field_content'] : 'Description';
 		$field_status     = isset( $options['field_status'] ) ? $options['field_status'] : 'Status';
 		$field_price      = isset( $options['field_price'] ) ? $options['field_price'] : 'Price';
+		$field_mileage    = isset( $options['field_mileage'] ) ? $options['field_mileage'] : 'F';
 		$currency_symbol  = isset( $options['currency_symbol'] ) ? $options['currency_symbol'] : '$';
 		$whatsapp_number  = isset( $options['whatsapp_number'] ) ? $options['whatsapp_number'] : '';
 		$frequency        = isset( $options['frequency'] ) ? $options['frequency'] : 'hourly';
@@ -1405,7 +1497,7 @@ class Dynamic_Sheet_Post_Sync {
 		if ( empty( $custom_meta ) ) {
 			$custom_meta = array(
 				array( 'sheet_col' => 'Year', 'meta_key' => '_vehicle_year', 'label' => 'Year', 'icon' => '🗓️', 'display' => 'badge' ),
-				array( 'sheet_col' => 'Mileage', 'meta_key' => '_vehicle_mileage', 'label' => 'Mileage', 'icon' => '🛣️', 'display' => 'primary_spec' ),
+				array( 'sheet_col' => 'F', 'meta_key' => '_vehicle_mileage', 'label' => 'Mileage', 'icon' => '🛣️', 'display' => 'primary_spec' ),
 				array( 'sheet_col' => 'Fuel Type', 'meta_key' => '_vehicle_fuel', 'label' => 'Fuel', 'icon' => '⛽', 'display' => 'primary_spec' ),
 				array( 'sheet_col' => 'Transmission', 'meta_key' => '_vehicle_transmission', 'label' => 'Gearbox', 'icon' => '🕹️', 'display' => 'primary_spec' ),
 				array( 'sheet_col' => 'Engine', 'meta_key' => '_vehicle_engine', 'label' => 'Engine', 'icon' => '⚙️', 'display' => 'detail' ),
@@ -1557,7 +1649,11 @@ class Dynamic_Sheet_Post_Sync {
 									<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 520px;">
 										<div>
 											<label style="display:block; font-weight:600; font-size:12px; margin-bottom: 3px;" for="field_price"><?php esc_html_e( 'Price Column', 'dynamic-sheet-sync' ); ?></label>
-											<input type="text" id="field_price" name="dynamic_sheet_sync_options[field_price]" value="<?php echo esc_attr( $field_price ); ?>" placeholder="e.g. Price or F" />
+											<input type="text" id="field_price" name="dynamic_sheet_sync_options[field_price]" value="<?php echo esc_attr( $field_price ); ?>" placeholder="e.g. Price" />
+										</div>
+										<div>
+											<label style="display:block; font-weight:600; font-size:12px; margin-bottom: 3px;" for="field_mileage"><?php esc_html_e( 'Mileage Column (Default: F)', 'dynamic-sheet-sync' ); ?></label>
+											<input type="text" id="field_mileage" name="dynamic_sheet_sync_options[field_mileage]" value="<?php echo esc_attr( $field_mileage ); ?>" placeholder="e.g. F or Mileage" />
 										</div>
 										<div>
 											<label style="display:block; font-weight:600; font-size:12px; margin-bottom: 3px;" for="field_content"><?php esc_html_e( 'Description Column', 'dynamic-sheet-sync' ); ?></label>
@@ -1832,6 +1928,8 @@ class Dynamic_Sheet_Post_Sync {
 		$content_index   = ! empty( $content_col_header ) ? self::resolve_col_index( $content_col_header, $headers ) : false;
 		$status_index    = ! empty( $status_col_header ) ? self::resolve_col_index( $status_col_header, $headers ) : false;
 		$price_index     = ! empty( $price_col_header ) ? self::resolve_col_index( $price_col_header, $headers ) : false;
+		$mileage_col     = isset( $options['field_mileage'] ) && '' !== trim( $options['field_mileage'] ) ? $options['field_mileage'] : 'F';
+		$mileage_index   = self::resolve_col_index( $mileage_col, $headers );
 		$image_index     = self::resolve_col_index( $field_image_col, $headers );
 		$sub_image_index = self::resolve_col_index( $field_sub_img_col, $headers );
 
@@ -1871,9 +1969,10 @@ class Dynamic_Sheet_Post_Sync {
 			// Build dynamic title (Car Name + Model + Year as one title).
 			$post_title = self::build_dynamic_title( $title_template, $row_data, $headers, $unique_id_value );
 
-			$post_content = ( false !== $content_index && isset( $row_data[$content_index] ) ) ? wp_kses_post( trim( $row_data[$content_index] ) ) : '';
-			$post_status  = ( false !== $status_index && isset( $row_data[$status_index] ) ) ? sanitize_text_field( trim( strtolower( $row_data[$status_index] ) ) ) : 'publish';
-			$price_value  = ( false !== $price_index && isset( $row_data[$price_index] ) ) ? sanitize_text_field( trim( $row_data[$price_index] ) ) : '';
+			$post_content  = ( false !== $content_index && isset( $row_data[$content_index] ) ) ? wp_kses_post( trim( $row_data[$content_index] ) ) : '';
+			$post_status   = ( false !== $status_index && isset( $row_data[$status_index] ) ) ? sanitize_text_field( trim( strtolower( $row_data[$status_index] ) ) ) : 'publish';
+			$price_value   = ( false !== $price_index && isset( $row_data[$price_index] ) ) ? sanitize_text_field( trim( $row_data[$price_index] ) ) : '';
+			$mileage_value = ( false !== $mileage_index && isset( $row_data[$mileage_index] ) ) ? sanitize_text_field( trim( $row_data[$mileage_index] ) ) : '';
 
 			// Images from Column AA and AB.
 			$main_img_raw = ( false !== $image_index && isset( $row_data[$image_index] ) ) ? trim( $row_data[$image_index] ) : '';
@@ -1948,6 +2047,11 @@ class Dynamic_Sheet_Post_Sync {
 				if ( ! empty( $price_value ) ) {
 					update_post_meta( $post_id, '_vehicle_price', $price_value );
 					update_post_meta( $post_id, '_price', preg_replace( '/[^0-9.]/', '', $price_value ) ); // For WooCommerce compatibility
+				}
+
+				// Save Mileage (Default Column F).
+				if ( ! empty( $mileage_value ) ) {
+					update_post_meta( $post_id, '_vehicle_mileage', $mileage_value );
 				}
 
 				// Process Custom Meta Fields.
@@ -2214,6 +2318,20 @@ class Dynamic_Sheet_Post_Sync {
 				}
 			}
 
+			// Mileage (Fetched from Column F or metadata).
+			$mileage = get_post_meta( $post_id, '_vehicle_mileage', true );
+			if ( empty( $mileage ) ) {
+				foreach ( $custom_meta as $spec ) {
+					if ( stripos( $spec['label'], 'Mileage' ) !== false || stripos( $spec['meta_key'], 'mileage' ) !== false ) {
+						$m_val = get_post_meta( $post_id, $spec['meta_key'], true );
+						if ( ! empty( $m_val ) ) {
+							$mileage = $m_val;
+							break;
+						}
+					}
+				}
+			}
+
 			// Get Gallery Images (Column AA + AB).
 			$gallery = get_post_meta( $post_id, '_vehicle_gallery', true );
 			if ( ! is_array( $gallery ) || empty( $gallery ) ) {
@@ -2228,7 +2346,7 @@ class Dynamic_Sheet_Post_Sync {
 
 			$image_count = count( $gallery );
 
-			// Build Card HTML with only: Image Slider, Car Name + Model + Year as one title, Price, View Details button.
+			// Build Card HTML with Modern Creative Design: Image Slider, Mileage Badges, Title, Price, View Details button.
 			ob_start();
 			?>
 			<div class="vehicle-card" 
@@ -2236,10 +2354,18 @@ class Dynamic_Sheet_Post_Sync {
 				data-id="<?php echo esc_attr( $car_id ); ?>" 
 				data-fuel="<?php echo esc_attr( $fuel_val ); ?>" 
 				data-year="<?php echo esc_attr( $year_val ); ?>" 
-				data-transmission="<?php echo esc_attr( $trans_val ); ?>">
+				data-transmission="<?php echo esc_attr( $trans_val ); ?>"
+				data-mileage="<?php echo esc_attr( $mileage ); ?>">
 				
 				<!-- Card Image Slider -->
 				<div class="vehicle-card-slider-container" data-current-index="0">
+					<?php if ( ! empty( $mileage ) ) : ?>
+						<div class="vehicle-card-mileage-badge">
+							<span class="badge-icon">🛣️</span>
+							<span class="badge-text"><?php echo esc_html( $mileage ); ?></span>
+						</div>
+					<?php endif; ?>
+
 					<?php if ( $image_count > 0 ) : ?>
 						<div class="vehicle-slider-track">
 							<?php foreach ( $gallery as $idx => $img_url ) : ?>
@@ -2273,7 +2399,7 @@ class Dynamic_Sheet_Post_Sync {
 					<?php endif; ?>
 				</div>
 
-				<!-- Card Body: Title, Price, View Details Button -->
+				<!-- Card Body: Title, Mileage Spec, Price, View Details Button -->
 				<div class="vehicle-card-body">
 					<div class="vehicle-card-content">
 						<h3 class="vehicle-card-title">
@@ -2281,6 +2407,14 @@ class Dynamic_Sheet_Post_Sync {
 								<?php echo esc_html( $car_title ); ?>
 							</a>
 						</h3>
+
+						<?php if ( ! empty( $mileage ) ) : ?>
+							<div class="vehicle-card-mileage-row">
+								<span class="vehicle-mileage-icon">🛣️</span>
+								<span class="vehicle-mileage-label"><?php esc_html_e( 'Mileage', 'dynamic-sheet-sync' ); ?>:</span>
+								<span class="vehicle-mileage-val"><?php echo esc_html( $mileage ); ?></span>
+							</div>
+						<?php endif; ?>
 
 						<?php if ( ! empty( $price ) ) : ?>
 							<div class="vehicle-card-price-wrap">
@@ -2422,12 +2556,13 @@ function dynamic_sheet_sync_activate() {
 			'field_content'      => 'Description',
 			'field_status'       => 'Status',
 			'field_price'        => 'Price',
+			'field_mileage'      => 'F',
 			'currency_symbol'    => '$',
 			'whatsapp_number'    => '',
 			'frequency'          => 'hourly',
 			'custom_meta'        => array(
 				array( 'sheet_col' => 'Year', 'meta_key' => '_vehicle_year', 'label' => 'Year', 'icon' => '🗓️', 'display' => 'badge' ),
-				array( 'sheet_col' => 'Mileage', 'meta_key' => '_vehicle_mileage', 'label' => 'Mileage', 'icon' => '🛣️', 'display' => 'primary_spec' ),
+				array( 'sheet_col' => 'F', 'meta_key' => '_vehicle_mileage', 'label' => 'Mileage', 'icon' => '🛣️', 'display' => 'primary_spec' ),
 				array( 'sheet_col' => 'Fuel Type', 'meta_key' => '_vehicle_fuel', 'label' => 'Fuel', 'icon' => '⛽', 'display' => 'primary_spec' ),
 				array( 'sheet_col' => 'Transmission', 'meta_key' => '_vehicle_transmission', 'label' => 'Gearbox', 'icon' => '🕹️', 'display' => 'primary_spec' ),
 				array( 'sheet_col' => 'Engine', 'meta_key' => '_vehicle_engine', 'label' => 'Engine', 'icon' => '⚙️', 'display' => 'detail' ),
