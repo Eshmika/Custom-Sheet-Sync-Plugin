@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamic Sheet to Post Type Sync & Vehicle Product Grid
  * Description: Automatically imports and syncs Google Sheet vehicle inventory into WordPress posts/products with multi-column titles, Google Drive image gallery slider (AA & AB columns), responsive creative filters, 9-card pagination, and dedicated full vehicle information pages.
- * Version: 2.1.3
+ * Version: 2.1.4
  * Author: Eshmika Hettiarachchi
  * Text Domain: dynamic-sheet-sync
  * License: GPL2
@@ -365,50 +365,49 @@ class Dynamic_Sheet_Post_Sync {
 			}
 
 			/* ==========================================================================
-			   VEHICLE PRODUCT GRID (9 PER PAGE)
+			   VEHICLE PRODUCT GRID (1 COLUMN HORIZONTAL CARDS)
 			   ========================================================================== */
 			.vehicle-grid {
 				display: grid;
-				grid-template-columns: repeat(var(--vg-cols, 3), 1fr);
-				gap: 28px;
-			}
-			@media (max-width: 1024px) {
-				.vehicle-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 20px; }
+				grid-template-columns: 1fr;
+				gap: 20px;
 			}
 			@media (max-width: 640px) {
-				.vehicle-grid { grid-template-columns: 1fr !important; gap: 18px; }
+				.vehicle-grid { gap: 16px; }
 				.vehicle-filter-wrapper { padding: 16px; }
 				.vehicle-select-wrap { width: 100%; min-width: 100%; }
 				.vehicle-reset-btn { width: 100%; justify-content: center; }
 			}
 
 			/* ==========================================================================
-			   STREAMLINED VEHICLE CARD
+			   HORIZONTAL 2-COLUMN VEHICLE CARD
 			   ========================================================================== */
 			.vehicle-card {
-				background: var(--vg-card-bg);
+				background: #ffffff;
 				border: 1px solid var(--vg-border);
 				border-radius: var(--vg-radius-lg);
 				overflow: hidden;
 				display: flex;
-				flex-direction: column;
-				transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
-				box-shadow: var(--vg-shadow-sm);
+				flex-direction: row;
+				align-items: stretch;
+				transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
+				box-shadow: 0 2px 10px rgba(23, 10, 61, 0.04);
 				position: relative;
 			}
 			.vehicle-card:hover {
-				transform: translateY(-6px);
-				box-shadow: var(--vg-shadow-hover);
-				border-color: #cbd5e1;
+				transform: translateY(-3px);
+				box-shadow: 0 10px 24px rgba(23, 10, 61, 0.1);
+				border-color: #d2cbe0;
 			}
 
 			/* ==========================================================================
-			   IMAGE SLIDER (CAROUSEL)
+			   LEFT COLUMN: IMAGE SLIDER (SMALL WIDTH)
 			   ========================================================================== */
 			.vehicle-card-slider-container {
 				position: relative;
-				width: 100%;
-				height: 230px;
+				flex: 0 0 280px;
+				width: 280px;
+				min-height: 190px;
 				background: #0f172a;
 				overflow: hidden;
 				user-select: none;
@@ -444,233 +443,164 @@ class Dynamic_Sheet_Post_Sync {
 				align-items: center;
 				justify-content: center;
 				color: #94a3b8;
-				background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+				background: linear-gradient(135deg, #f8f6fc 0%, #ede8f5 100%);
 			}
-			.vehicle-card-placeholder svg { width: 50px; height: 50px; fill: currentColor; }
+			.vehicle-card-placeholder svg { width: 44px; height: 44px; fill: currentColor; }
 
 			/* Slider Navigation Controls */
 			.vehicle-slider-btn {
 				position: absolute;
 				top: 50%;
 				transform: translateY(-50%);
-				width: 34px;
-				height: 34px;
-				background: rgba(15, 23, 42, 0.7);
+				width: 32px;
+				height: 32px;
+				background: rgba(23, 10, 61, 0.72);
 				color: #ffffff;
-				border: 1px solid rgba(255,255,255,0.2);
+				border: 1px solid rgba(255,255,255,0.25);
 				border-radius: 50%;
 				display: flex;
 				align-items: center;
 				justify-content: center;
 				cursor: pointer;
-				font-size: 18px;
+				font-size: 17px;
 				line-height: 1;
 				z-index: 5;
 				opacity: 0;
-				transition: all 0.25s ease;
+				transition: all 0.2s ease;
 				backdrop-filter: blur(4px);
 			}
 			.vehicle-card:hover .vehicle-slider-btn {
 				opacity: 1;
 			}
 			.vehicle-slider-btn:hover {
-				background: rgba(37, 99, 235, 0.95);
-				border-color: #2563eb;
-				transform: translateY(-50%) scale(1.1);
+				background: #3a1f62;
+				border-color: #3a1f62;
+				transform: translateY(-50%) scale(1.08);
 			}
-			.vehicle-slider-btn.prev { left: 10px; }
-			.vehicle-slider-btn.next { right: 10px; }
+			.vehicle-slider-btn.prev { left: 8px; }
+			.vehicle-slider-btn.next { right: 8px; }
 
 			/* Slider Counter & Dots */
 			.vehicle-slider-counter {
 				position: absolute;
-				bottom: 10px;
-				right: 12px;
-				background: rgba(15, 23, 42, 0.75);
+				bottom: 8px;
+				right: 10px;
+				background: rgba(23, 10, 61, 0.78);
 				color: #ffffff;
-				font-size: 11px;
+				font-size: 10.5px;
 				font-weight: 700;
-				padding: 3px 8px;
-				border-radius: 12px;
+				padding: 2px 7px;
+				border-radius: 10px;
 				letter-spacing: 0.5px;
 				backdrop-filter: blur(4px);
 				z-index: 4;
 			}
 			.vehicle-slider-dots {
 				position: absolute;
-				bottom: 10px;
+				bottom: 8px;
 				left: 50%;
 				transform: translateX(-50%);
 				display: flex;
-				gap: 5px;
+				gap: 4px;
 				z-index: 4;
 			}
 			.vehicle-slider-dot {
-				width: 6px;
-				height: 6px;
+				width: 5px;
+				height: 5px;
 				border-radius: 50%;
 				background: rgba(255, 255, 255, 0.5);
 				transition: all 0.25s ease;
 				cursor: pointer;
 			}
 			.vehicle-slider-dot.active {
-				width: 18px;
-				border-radius: 10px;
+				width: 15px;
+				border-radius: 8px;
 				background: #ffffff;
 			}
 
 			/* ==========================================================================
-			   MODERN CREATIVE VEHICLE CARD BODY
+			   RIGHT COLUMN: VEHICLE DETAILS (EXACTLY 3 CLEAN LINES)
 			   ========================================================================== */
 			.vehicle-card-body {
-				padding: 18px 20px 20px;
+				flex: 1;
+				padding: 24px 28px;
 				display: flex;
 				flex-direction: column;
-				flex: 1;
-				justify-content: space-between;
-				background: linear-gradient(180deg, #ffffff 0%, #fafcff 100%);
+				justify-content: center;
+				background: #ffffff;
+				min-width: 0;
 			}
-			.vehicle-card-content {
-				margin-bottom: 16px;
+			.vehicle-card-details {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+				min-width: 0;
 			}
+
+			/* Line 1: Vehicle Card Title */
 			.vehicle-card-title {
 				font-size: 16px;
 				font-weight: 700;
-				color: var(--vg-text-main);
-				margin: 0 0 10px 0;
-				line-height: 1.38;
-				letter-spacing: -0.2px;
+				color: #170a3d;
+				margin: 0;
+				line-height: 1.35;
+				letter-spacing: -0.25px;
+				word-break: break-word;
 			}
 			.vehicle-card-title a {
-				color: inherit;
+				color: #170a3d;
 				text-decoration: none;
-				font-weight: 700;
 				transition: color 0.2s ease;
 			}
 			.vehicle-card-title a:hover {
-				color: var(--vg-primary);
-			}
-
-			/* Modern Creative Mileage Floating Badge */
-			.vehicle-card-mileage-badge {
-				position: absolute;
-				top: 12px;
-				left: 12px;
-				background: rgba(15, 23, 42, 0.78);
-				backdrop-filter: blur(8px);
-				-webkit-backdrop-filter: blur(8px);
-				color: #ffffff;
-				font-size: 12px;
-				font-weight: 700;
-				padding: 4px 10px;
-				border-radius: 20px;
-				display: inline-flex;
-				align-items: center;
-				gap: 5px;
-				box-shadow: 0 2px 8px rgba(0,0,0,0.22);
-				border: 1px solid rgba(255,255,255,0.22);
-				z-index: 4;
-				letter-spacing: 0.3px;
-			}
-			.vehicle-card-mileage-badge .badge-icon {
-				font-size: 11px;
-			}
-
-			/* Modern Creative Mileage Card Spec Row */
-			.vehicle-card-mileage-row {
-				display: inline-flex;
-				align-items: center;
-				gap: 6px;
-				background: #f1f5f9;
-				border: 1px solid #e2e8f0;
-				padding: 5px 10px;
-				border-radius: 8px;
-				margin-bottom: 12px;
-				font-size: 13px;
-				color: #334155;
-				font-weight: 600;
-			}
-			.vehicle-card-mileage-row .vehicle-mileage-icon {
-				font-size: 13px;
-			}
-			.vehicle-card-mileage-row .vehicle-mileage-label {
-				font-weight: 600;
-				color: #64748b;
-				font-size: 12px;
-				text-transform: uppercase;
-				letter-spacing: 0.4px;
-			}
-			.vehicle-card-mileage-row .vehicle-mileage-val {
-				font-weight: 700;
-				color: #0f172a;
-			}
-
-			/* Modern Vehicle Price Wrap (15px desktop, 13px mobile, uniform size) */
-			.vehicle-card-price-wrap {
-				display: inline-flex;
-				align-items: center;
-				gap: 6px;
-				background: #fbf9fd;
-				border: 1px solid #dfd8ec;
-				padding: 6px 12px;
-				border-radius: 8px;
-				font-size: 15px;
-				line-height: 1.3;
-			}
-			.vehicle-card-price-label {
-				font-size: 15px;
-				font-weight: 700;
 				color: #3a1f62;
-				text-transform: none;
-				letter-spacing: 0;
-			}
-			.vehicle-card-price {
-				display: inline-flex;
-				align-items: baseline;
-				font-size: 15px;
-				font-weight: 800;
-				color: #170a3d;
-				letter-spacing: -0.2px;
-			}
-			.vehicle-card-price .currency {
-				font-size: 15px;
-				font-weight: 800;
-				margin-right: 2px;
 			}
 
-			/* Card Action Button */
-			.vehicle-card-actions {
-				margin-top: auto;
-				padding-top: 6px;
-			}
-			.vehicle-btn-details {
-				width: 100%;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				gap: 8px;
-				padding: 11px 18px;
-				background: linear-gradient(135deg, #3a1f62 0%, #170a3d 100%);
-				color: #ffffff !important;
+			/* Line 2: Mileage | Body Style | Condition (Plain values only, simple text) */
+			.vehicle-card-specs-line {
 				font-size: 14px;
-				font-weight: 700;
-				border-radius: var(--vg-radius-md);
-				text-decoration: none !important;
-				border: none;
-				cursor: pointer;
-				box-shadow: 0 4px 12px rgba(23, 10, 61, 0.22);
-				transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+				font-weight: 500;
+				color: #6b637d;
+				line-height: 1.4;
+				margin: 0;
+				letter-spacing: 0.1px;
 			}
-			.vehicle-btn-details .btn-arrow {
-				transition: transform 0.25s ease;
+
+			/* Line 3: Price (Value only, unique prominent typography) */
+			.vehicle-card-price-unique {
+				font-size: 23px;
+				font-weight: 800;
+				color: #3a1f62;
+				letter-spacing: -0.5px;
+				line-height: 1.2;
+				margin-top: 4px;
+				font-feature-settings: "tnum";
+				font-variant-numeric: tabular-nums;
 			}
-			.vehicle-btn-details:hover {
-				background: linear-gradient(135deg, #4d2b80 0%, #26114e 100%);
-				box-shadow: 0 6px 18px rgba(23, 10, 61, 0.35);
-				transform: translateY(-1px);
-			}
-			.vehicle-btn-details:hover .btn-arrow {
-				transform: translateX(4px);
+
+			/* Responsive styling for horizontal cards */
+			@media (max-width: 768px) {
+				.vehicle-card {
+					flex-direction: column;
+				}
+				.vehicle-card-slider-container {
+					flex: none;
+					width: 100%;
+					height: 220px;
+					min-height: 220px;
+				}
+				.vehicle-card-body {
+					padding: 18px 20px;
+				}
+				.vehicle-card-title {
+					font-size: 15px;
+				}
+				.vehicle-card-specs-line {
+					font-size: 13.5px;
+				}
+				.vehicle-card-price-unique {
+					font-size: 21px;
+				}
 			}
 
 			/* ==========================================================================
@@ -740,20 +670,15 @@ class Dynamic_Sheet_Post_Sync {
 			@media (max-width: 640px) {
 				.vehicle-card-title {
 					font-size: 14px !important;
-					font-weight: 700 !important;
 				}
-				.vehicle-card-price-wrap,
-				.vehicle-card-price-label,
-				.vehicle-card-price,
-				.vehicle-card-price .currency {
+				.vehicle-card-specs-line {
 					font-size: 13px !important;
 				}
-				.vehicle-card-mileage-row {
-					font-size: 12px;
-					padding: 4px 8px;
+				.vehicle-card-price-unique {
+					font-size: 20px !important;
 				}
 				.vehicle-card-body {
-					padding: 14px 16px 16px;
+					padding: 16px 18px;
 				}
 			}
 
@@ -1999,6 +1924,14 @@ class Dynamic_Sheet_Post_Sync {
 		$price_index     = ! empty( $price_col_header ) ? self::resolve_col_index( $price_col_header, $headers ) : false;
 		$mileage_col     = isset( $options['field_mileage'] ) && '' !== trim( $options['field_mileage'] ) ? $options['field_mileage'] : 'F';
 		$mileage_index   = self::resolve_col_index( $mileage_col, $headers );
+		$body_style_index = self::resolve_col_index( 'M', $headers );
+		if ( false === $body_style_index ) {
+			$body_style_index = self::resolve_col_index( 'Body Style', $headers );
+		}
+		$condition_index = self::resolve_col_index( 'V', $headers );
+		if ( false === $condition_index ) {
+			$condition_index = self::resolve_col_index( 'Condition', $headers );
+		}
 		$image_index     = self::resolve_col_index( $field_image_col, $headers );
 		$sub_image_index = self::resolve_col_index( $field_sub_img_col, $headers );
 
@@ -2121,6 +2054,17 @@ class Dynamic_Sheet_Post_Sync {
 				// Save Mileage (Default Column F).
 				if ( ! empty( $mileage_value ) ) {
 					update_post_meta( $post_id, '_vehicle_mileage', $mileage_value );
+				}
+
+				// Save Body Style (Column M) & Condition (Column V).
+				$body_style_val = ( false !== $body_style_index && isset( $row_data[$body_style_index] ) ) ? sanitize_text_field( trim( $row_data[$body_style_index] ) ) : '';
+				if ( ! empty( $body_style_val ) ) {
+					update_post_meta( $post_id, '_vehicle_body_style', $body_style_val );
+				}
+
+				$condition_val = ( false !== $condition_index && isset( $row_data[$condition_index] ) ) ? sanitize_text_field( trim( $row_data[$condition_index] ) ) : '';
+				if ( ! empty( $condition_val ) ) {
+					update_post_meta( $post_id, '_vehicle_condition', $condition_val );
 				}
 
 				// Process Custom Meta Fields.
@@ -2313,7 +2257,7 @@ class Dynamic_Sheet_Post_Sync {
 		$custom_meta      = isset( $options['custom_meta'] ) && is_array( $options['custom_meta'] ) ? $options['custom_meta'] : array();
 
 		$atts = shortcode_atts( array(
-			'columns'        => '3',
+			'columns'        => '1',
 			'per_page'       => '9',
 			'posts_per_page' => '-1', // Query all published vehicles so client-side filter and 9-card pagination work instantly
 			'post_type'      => $default_pt,
@@ -2402,6 +2346,47 @@ class Dynamic_Sheet_Post_Sync {
 				}
 			}
 
+			// Body Style (Column M) & Condition (Column V).
+			$body_style = get_post_meta( $post_id, '_vehicle_body_style', true );
+			if ( empty( $body_style ) ) {
+				foreach ( $custom_meta as $spec ) {
+					if ( ( isset( $spec['sheet_col'] ) && 'M' === strtoupper( trim( $spec['sheet_col'] ) ) )
+						|| stripos( $spec['label'], 'Body' ) !== false
+						|| stripos( $spec['meta_key'], 'body_style' ) !== false ) {
+						$bs_val = get_post_meta( $post_id, $spec['meta_key'], true );
+						if ( ! empty( $bs_val ) ) {
+							$body_style = $bs_val;
+							break;
+						}
+					}
+				}
+			}
+
+			$condition = get_post_meta( $post_id, '_vehicle_condition', true );
+			if ( empty( $condition ) ) {
+				foreach ( $custom_meta as $spec ) {
+					if ( ( isset( $spec['sheet_col'] ) && 'V' === strtoupper( trim( $spec['sheet_col'] ) ) )
+						|| stripos( $spec['label'], 'Condition' ) !== false
+						|| stripos( $spec['meta_key'], 'condition' ) !== false ) {
+						$c_val = get_post_meta( $post_id, $spec['meta_key'], true );
+						if ( ! empty( $c_val ) ) {
+							$condition = $c_val;
+							break;
+						}
+					}
+				}
+			}
+
+			// Spec text line 2: Mileage | Body Style | Condition (plain text values only).
+			$specs_line_items = array_filter( array( $mileage, $body_style, $condition ), function( $val ) {
+				return null !== $val && '' !== trim( strval( $val ) );
+			} );
+			$specs_line_text = implode( ' | ', $specs_line_items );
+
+			// Format Price line 3 (plain value only, unique display).
+			$clean_price = preg_replace( '/[^0-9.]/', '', strval( $price ) );
+			$formatted_price = ! empty( $clean_price ) ? $atts['currency'] . number_format_i18n( floatval( $clean_price ) ) : ( ! empty( $price ) ? esc_html( $price ) : '' );
+
 			// Get Gallery Images (Column AA + AB).
 			$gallery = get_post_meta( $post_id, '_vehicle_gallery', true );
 			if ( ! is_array( $gallery ) || empty( $gallery ) ) {
@@ -2416,7 +2401,7 @@ class Dynamic_Sheet_Post_Sync {
 
 			$image_count = count( $gallery );
 
-			// Build Card HTML with Modern Creative Design: Image Slider, Mileage Badges, Title, Price, View Details button.
+			// Build Card HTML with Modern Horizontal Layout: Left slider column, Right details column (3 lines).
 			ob_start();
 			?>
 			<div class="vehicle-card" 
@@ -2427,7 +2412,7 @@ class Dynamic_Sheet_Post_Sync {
 				data-transmission="<?php echo esc_attr( $trans_val ); ?>"
 				data-mileage="<?php echo esc_attr( $mileage ); ?>">
 				
-				<!-- Card Image Slider -->
+				<!-- Left Column: Card Image Slider -->
 				<div class="vehicle-card-slider-container" data-current-index="0">
 					<?php if ( $image_count > 0 ) : ?>
 						<div class="vehicle-slider-track">
@@ -2462,38 +2447,29 @@ class Dynamic_Sheet_Post_Sync {
 					<?php endif; ?>
 				</div>
 
-				<!-- Card Body: Title, Mileage Spec, Price, View Details Button -->
+				<!-- Right Column: Vehicle Details (Line 1: Title, Line 2: Mileage | Body Style | Condition, Line 3: Price) -->
 				<div class="vehicle-card-body">
-					<div class="vehicle-card-content">
+					<div class="vehicle-card-details">
+						<!-- Line 1: Vehicle Card Title -->
 						<h3 class="vehicle-card-title">
 							<a href="<?php echo esc_url( $permalink ); ?>">
 								<?php echo esc_html( $car_title ); ?>
 							</a>
 						</h3>
 
-						<?php if ( ! empty( $mileage ) ) : ?>
-							<div class="vehicle-card-mileage-row">
-								<span class="vehicle-mileage-label"><?php esc_html_e( 'Mileage', 'dynamic-sheet-sync' ); ?>:</span>
-								<span class="vehicle-mileage-val"><?php echo esc_html( $mileage ); ?></span>
+						<!-- Line 2: Mileage | Body Style | Condition (Values only, simple text) -->
+						<?php if ( ! empty( $specs_line_text ) ) : ?>
+							<div class="vehicle-card-specs-line">
+								<?php echo esc_html( $specs_line_text ); ?>
 							</div>
 						<?php endif; ?>
 
-						<?php if ( ! empty( $price ) ) : ?>
-							<div class="vehicle-card-price-wrap">
-								<span class="vehicle-card-price-label"><?php esc_html_e( 'Price', 'dynamic-sheet-sync' ); ?>:</span>
-								<div class="vehicle-card-price">
-									<span class="currency"><?php echo esc_html( $atts['currency'] ); ?></span><?php echo esc_html( number_format_i18n( floatval( preg_replace( '/[^0-9.]/', '', $price ) ) ) ); ?>
-								</div>
+						<!-- Line 3: Price (Value only, unique prominent text) -->
+						<?php if ( ! empty( $formatted_price ) ) : ?>
+							<div class="vehicle-card-price-unique">
+								<?php echo esc_html( $formatted_price ); ?>
 							</div>
 						<?php endif; ?>
-					</div>
-
-					<!-- View Details Button (Redirects to Single Vehicle Page) -->
-					<div class="vehicle-card-actions">
-						<a href="<?php echo esc_url( $permalink ); ?>" class="vehicle-btn-details">
-							<span><?php esc_html_e( 'View Details', 'dynamic-sheet-sync' ); ?></span>
-							<span class="btn-arrow">→</span>
-						</a>
 					</div>
 				</div>
 			</div>
@@ -2511,9 +2487,8 @@ class Dynamic_Sheet_Post_Sync {
 
 			if ( 'yes' === $atts['show_search'] ) {
 				$filter_bar_html .= '
-					<div class="vehicle-search-box">
-						<svg class="vehicle-search-svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#6b637d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-						<input type="text" class="vehicle-search-input" placeholder="' . esc_attr__( 'Search make, model, year, or Car ID...', 'dynamic-sheet-sync' ) . '" />
+					<div class="vehicle-search-box">						
+						<input type="text" class="vehicle-search-input" placeholder="' . esc_attr__( 'What are you looking for?', 'dynamic-sheet-sync' ) . '" />
 						<button type="button" class="vehicle-search-clear" title="' . esc_attr__( 'Clear search', 'dynamic-sheet-sync' ) . '">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
 						</button>
