@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamic Sheet to Post Type Sync & Vehicle Product Grid
  * Description: Automatically imports and syncs Google Sheet vehicle inventory into WordPress posts/products with multi-column titles, Google Drive image gallery slider (AA & AB columns), responsive creative filters, 9-card pagination, and dedicated full vehicle information pages.
- * Version: 2.1.0
+ * Version: 2.1.2
  * Author: Eshmika Hettiarachchi
  * Text Domain: dynamic-sheet-sync
  * License: GPL2
@@ -1496,12 +1496,12 @@ class Dynamic_Sheet_Post_Sync {
 		// Default initial vehicle custom meta rows if empty.
 		if ( empty( $custom_meta ) ) {
 			$custom_meta = array(
-				array( 'sheet_col' => 'Year', 'meta_key' => '_vehicle_year', 'label' => 'Year', 'icon' => '🗓️', 'display' => 'badge' ),
-				array( 'sheet_col' => 'F', 'meta_key' => '_vehicle_mileage', 'label' => 'Mileage', 'icon' => '🛣️', 'display' => 'primary_spec' ),
-				array( 'sheet_col' => 'Fuel Type', 'meta_key' => '_vehicle_fuel', 'label' => 'Fuel', 'icon' => '⛽', 'display' => 'primary_spec' ),
-				array( 'sheet_col' => 'Transmission', 'meta_key' => '_vehicle_transmission', 'label' => 'Gearbox', 'icon' => '🕹️', 'display' => 'primary_spec' ),
-				array( 'sheet_col' => 'Engine', 'meta_key' => '_vehicle_engine', 'label' => 'Engine', 'icon' => '⚙️', 'display' => 'detail' ),
-				array( 'sheet_col' => 'Color', 'meta_key' => '_vehicle_color', 'label' => 'Color', 'icon' => '🎨', 'display' => 'detail' ),
+				array( 'sheet_col' => 'Year', 'meta_key' => '_vehicle_year', 'label' => 'Year', 'icon' => '', 'display' => 'badge' ),
+				array( 'sheet_col' => 'F', 'meta_key' => '_vehicle_mileage', 'label' => 'Mileage', 'icon' => '', 'display' => 'primary_spec' ),
+				array( 'sheet_col' => 'Fuel Type', 'meta_key' => '_vehicle_fuel', 'label' => 'Fuel', 'icon' => '', 'display' => 'primary_spec' ),
+				array( 'sheet_col' => 'Transmission', 'meta_key' => '_vehicle_transmission', 'label' => 'Gearbox', 'icon' => '', 'display' => 'primary_spec' ),
+				array( 'sheet_col' => 'Engine', 'meta_key' => '_vehicle_engine', 'label' => 'Engine', 'icon' => '', 'display' => 'detail' ),
+				array( 'sheet_col' => 'Color', 'meta_key' => '_vehicle_color', 'label' => 'Color', 'icon' => '', 'display' => 'detail' ),
 			);
 		}
 
@@ -1511,7 +1511,7 @@ class Dynamic_Sheet_Post_Sync {
 			<div class="sheet-sync-card">
 				<div class="sheet-sync-header">
 					<div>
-						<h1>🚗 <?php esc_html_e( 'Vehicle Sheet Sync & Product Catalog', 'dynamic-sheet-sync' ); ?></h1>
+						<h1><?php esc_html_e( 'Vehicle Sheet Sync & Product Catalog', 'dynamic-sheet-sync' ); ?></h1>
 						<p style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;"><?php esc_html_e( 'Seamlessly import vehicle inventory from Google Sheets and display as high-converting vehicle showcase cards with Google Drive image sliders and dedicated detail pages.', 'dynamic-sheet-sync' ); ?></p>
 					</div>
 					<span class="sheet-sync-badge">v2.1 PRO</span>
@@ -1545,16 +1545,16 @@ class Dynamic_Sheet_Post_Sync {
 						<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="margin:0;">
 							<?php wp_nonce_field( 'manual_sheet_sync_action', 'manual_sheet_sync_nonce' ); ?>
 							<input type="hidden" name="action" value="dynamic_sheet_sync_now" />
-							<button type="submit" class="button button-primary" style="padding: 4px 16px; height: 36px; font-weight: 600;">🔄 <?php esc_html_e( 'Sync Now', 'dynamic-sheet-sync' ); ?></button>
+							<button type="submit" class="button button-primary" style="padding: 4px 16px; height: 36px; font-weight: 600;"><?php esc_html_e( 'Sync Now', 'dynamic-sheet-sync' ); ?></button>
 						</form>
 					</div>
 				</div>
 
 				<!-- Navigation Tabs -->
 				<div class="sheet-nav-tabs">
-					<a class="sheet-nav-tab active" data-tab="tab-sheet-config">⚙️ <?php esc_html_e( 'Sheet & Column Mapping', 'dynamic-sheet-sync' ); ?></a>
-					<a class="sheet-nav-tab" data-tab="tab-specs-repeater">📋 <?php esc_html_e( 'Vehicle Specs & Meta Attributes', 'dynamic-sheet-sync' ); ?></a>
-					<a class="sheet-nav-tab" data-tab="tab-shortcodes">🎨 <?php esc_html_e( 'Frontend Shortcodes & Showcase', 'dynamic-sheet-sync' ); ?></a>
+					<a class="sheet-nav-tab active" data-tab="tab-sheet-config"><?php esc_html_e( 'Sheet & Column Mapping', 'dynamic-sheet-sync' ); ?></a>
+					<a class="sheet-nav-tab" data-tab="tab-specs-repeater"><?php esc_html_e( 'Vehicle Specs & Meta Attributes', 'dynamic-sheet-sync' ); ?></a>
+					<a class="sheet-nav-tab" data-tab="tab-shortcodes"><?php esc_html_e( 'Frontend Shortcodes & Showcase', 'dynamic-sheet-sync' ); ?></a>
 				</div>
 
 				<!-- Settings Form -->
@@ -1623,7 +1623,7 @@ class Dynamic_Sheet_Post_Sync {
 							<!-- Google Drive Images (AA and AB) -->
 							<tr style="background: #f0fdf4; border-top: 1px solid #bbf7d0; border-bottom: 1px solid #bbf7d0;">
 								<th scope="row" style="padding-left: 12px;">
-									<strong>🖼️ <?php esc_html_e( 'Google Drive Image Columns (Slider)', 'dynamic-sheet-sync' ); ?></strong>
+									<strong><?php esc_html_e( 'Google Drive Image Columns (Slider)', 'dynamic-sheet-sync' ); ?></strong>
 								</th>
 								<td>
 									<div style="display: flex; gap: 15px; flex-wrap: wrap;">
@@ -1735,7 +1735,7 @@ class Dynamic_Sheet_Post_Sync {
 												<input type="text" name="dynamic_sheet_sync_options[custom_meta][<?php echo intval( $index ); ?>][label]" value="<?php echo esc_attr( $row['label'] ); ?>" placeholder="e.g. Mileage" />
 											</td>
 											<td>
-												<input type="text" name="dynamic_sheet_sync_options[custom_meta][<?php echo intval( $index ); ?>][icon]" value="<?php echo esc_attr( isset( $row['icon'] ) ? $row['icon'] : '' ); ?>" placeholder="e.g. 🛣️" style="text-align: center;" />
+												<input type="text" name="dynamic_sheet_sync_options[custom_meta][<?php echo intval( $index ); ?>][icon]" value="<?php echo esc_attr( isset( $row['icon'] ) ? $row['icon'] : '' ); ?>" placeholder="e.g. •" style="text-align: center;" />
 											</td>
 											<td>
 												<select name="dynamic_sheet_sync_options[custom_meta][<?php echo intval( $index ); ?>][display]">
@@ -1809,7 +1809,7 @@ class Dynamic_Sheet_Post_Sync {
 						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][sheet_col]" placeholder="e.g. Color or H" value="" /></td>' +
 						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][meta_key]" placeholder="e.g. _vehicle_color" value="" /></td>' +
 						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][label]" placeholder="e.g. Color" value="" /></td>' +
-						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][icon]" placeholder="e.g. 🎨" style="text-align:center;" value="" /></td>' +
+						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][icon]" placeholder="e.g. •" style="text-align:center;" value="" /></td>' +
 						'<td>' +
 							'<select name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][display]">' +
 								'<option value="primary_spec">Full Specs Grid</option>' +
@@ -2191,7 +2191,6 @@ class Dynamic_Sheet_Post_Sync {
 					<div class="vehicle-single-specs-grid">
 						<?php if ( ! empty( $car_id ) ) : ?>
 							<div class="vehicle-single-spec-card">
-								<span class="vehicle-single-spec-icon">🆔</span>
 								<div>
 									<span class="vehicle-single-spec-label"><?php esc_html_e( 'Vehicle ID', 'dynamic-sheet-sync' ); ?></span>
 									<span class="vehicle-single-spec-val">#<?php echo esc_html( $car_id ); ?></span>
@@ -2200,7 +2199,9 @@ class Dynamic_Sheet_Post_Sync {
 						<?php endif; ?>
 						<?php foreach ( $all_specs as $s ) : ?>
 							<div class="vehicle-single-spec-card">
-								<span class="vehicle-single-spec-icon"><?php echo esc_html( $s['icon'] ); ?></span>
+								<?php if ( ! empty( $s['icon'] ) ) : ?>
+									<span class="vehicle-single-spec-icon"><?php echo esc_html( $s['icon'] ); ?></span>
+								<?php endif; ?>
 								<div>
 									<span class="vehicle-single-spec-label"><?php echo esc_html( $s['label'] ); ?></span>
 									<span class="vehicle-single-spec-val"><?php echo esc_html( $s['value'] ); ?></span>
@@ -2213,7 +2214,7 @@ class Dynamic_Sheet_Post_Sync {
 					<div class="vehicle-single-actions">
 						<?php if ( ! empty( $whatsapp_url ) ) : ?>
 							<a href="<?php echo esc_url( $whatsapp_url ); ?>" target="_blank" rel="noopener" class="vehicle-single-btn-whatsapp">
-								💬 <?php esc_html_e( 'Inquire via WhatsApp', 'dynamic-sheet-sync' ); ?>
+								<?php esc_html_e( 'Inquire via WhatsApp', 'dynamic-sheet-sync' ); ?>
 							</a>
 						<?php endif; ?>
 					</div>
@@ -2361,7 +2362,6 @@ class Dynamic_Sheet_Post_Sync {
 				<div class="vehicle-card-slider-container" data-current-index="0">
 					<?php if ( ! empty( $mileage ) ) : ?>
 						<div class="vehicle-card-mileage-badge">
-							<span class="badge-icon">🛣️</span>
 							<span class="badge-text"><?php echo esc_html( $mileage ); ?></span>
 						</div>
 					<?php endif; ?>
@@ -2410,7 +2410,6 @@ class Dynamic_Sheet_Post_Sync {
 
 						<?php if ( ! empty( $mileage ) ) : ?>
 							<div class="vehicle-card-mileage-row">
-								<span class="vehicle-mileage-icon">🛣️</span>
 								<span class="vehicle-mileage-label"><?php esc_html_e( 'Mileage', 'dynamic-sheet-sync' ); ?>:</span>
 								<span class="vehicle-mileage-val"><?php echo esc_html( $mileage ); ?></span>
 							</div>
@@ -2450,7 +2449,7 @@ class Dynamic_Sheet_Post_Sync {
 			if ( 'yes' === $atts['show_search'] ) {
 				$filter_bar_html .= '
 					<div class="vehicle-search-box">
-						<span class="vehicle-search-icon">🔍</span>
+						<svg class="vehicle-search-svg" viewBox="0 0 24 24" width="16" height="16" style="flex-shrink:0; fill:#94a3b8;"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
 						<input type="text" class="vehicle-search-input" placeholder="' . esc_attr__( 'Search make, model, year, or Car ID...', 'dynamic-sheet-sync' ) . '" />
 						<button type="button" class="vehicle-search-clear" title="' . esc_attr__( 'Clear search', 'dynamic-sheet-sync' ) . '">&times;</button>
 					</div>
@@ -2465,7 +2464,7 @@ class Dynamic_Sheet_Post_Sync {
 					$filter_bar_html .= '
 					<div class="vehicle-select-wrap">
 						<select class="vehicle-filter-select vehicle-filter-fuel">
-							<option value="">' . esc_html__( '⛽ All Fuels', 'dynamic-sheet-sync' ) . '</option>';
+							<option value="">' . esc_html__( 'All Fuels', 'dynamic-sheet-sync' ) . '</option>';
 					foreach ( array_keys( $all_fuels ) as $f ) {
 						$filter_bar_html .= '<option value="' . esc_attr( $f ) . '">' . esc_html( $f ) . '</option>';
 					}
@@ -2478,7 +2477,7 @@ class Dynamic_Sheet_Post_Sync {
 					$filter_bar_html .= '
 					<div class="vehicle-select-wrap">
 						<select class="vehicle-filter-select vehicle-filter-year">
-							<option value="">' . esc_html__( '🗓️ All Years', 'dynamic-sheet-sync' ) . '</option>';
+							<option value="">' . esc_html__( 'All Years', 'dynamic-sheet-sync' ) . '</option>';
 					foreach ( array_keys( $all_years ) as $y ) {
 						$filter_bar_html .= '<option value="' . esc_attr( $y ) . '">' . esc_html( $y ) . '</option>';
 					}
@@ -2490,14 +2489,14 @@ class Dynamic_Sheet_Post_Sync {
 					$filter_bar_html .= '
 					<div class="vehicle-select-wrap">
 						<select class="vehicle-filter-select vehicle-filter-transmission">
-							<option value="">' . esc_html__( '🕹️ Gearbox', 'dynamic-sheet-sync' ) . '</option>';
+							<option value="">' . esc_html__( 'All Transmissions', 'dynamic-sheet-sync' ) . '</option>';
 					foreach ( array_keys( $all_trans ) as $t ) {
 						$filter_bar_html .= '<option value="' . esc_attr( $t ) . '">' . esc_html( $t ) . '</option>';
 					}
 					$filter_bar_html .= '</select><span class="vehicle-select-arrow">▼</span></div>';
 				}
 
-				$filter_bar_html .= '<button type="button" class="vehicle-reset-btn">🔄 ' . esc_html__( 'Reset', 'dynamic-sheet-sync' ) . '</button>';
+				$filter_bar_html .= '<button type="button" class="vehicle-reset-btn">' . esc_html__( 'Reset Filters', 'dynamic-sheet-sync' ) . '</button>';
 				$filter_bar_html .= '</div>';
 			}
 
@@ -2561,12 +2560,12 @@ function dynamic_sheet_sync_activate() {
 			'whatsapp_number'    => '',
 			'frequency'          => 'hourly',
 			'custom_meta'        => array(
-				array( 'sheet_col' => 'Year', 'meta_key' => '_vehicle_year', 'label' => 'Year', 'icon' => '🗓️', 'display' => 'badge' ),
-				array( 'sheet_col' => 'F', 'meta_key' => '_vehicle_mileage', 'label' => 'Mileage', 'icon' => '🛣️', 'display' => 'primary_spec' ),
-				array( 'sheet_col' => 'Fuel Type', 'meta_key' => '_vehicle_fuel', 'label' => 'Fuel', 'icon' => '⛽', 'display' => 'primary_spec' ),
-				array( 'sheet_col' => 'Transmission', 'meta_key' => '_vehicle_transmission', 'label' => 'Gearbox', 'icon' => '🕹️', 'display' => 'primary_spec' ),
-				array( 'sheet_col' => 'Engine', 'meta_key' => '_vehicle_engine', 'label' => 'Engine', 'icon' => '⚙️', 'display' => 'detail' ),
-				array( 'sheet_col' => 'Color', 'meta_key' => '_vehicle_color', 'label' => 'Color', 'icon' => '🎨', 'display' => 'detail' ),
+				array( 'sheet_col' => 'Year', 'meta_key' => '_vehicle_year', 'label' => 'Year', 'icon' => '', 'display' => 'badge' ),
+				array( 'sheet_col' => 'F', 'meta_key' => '_vehicle_mileage', 'label' => 'Mileage', 'icon' => '', 'display' => 'primary_spec' ),
+				array( 'sheet_col' => 'Fuel Type', 'meta_key' => '_vehicle_fuel', 'label' => 'Fuel', 'icon' => '', 'display' => 'primary_spec' ),
+				array( 'sheet_col' => 'Transmission', 'meta_key' => '_vehicle_transmission', 'label' => 'Gearbox', 'icon' => '', 'display' => 'primary_spec' ),
+				array( 'sheet_col' => 'Engine', 'meta_key' => '_vehicle_engine', 'label' => 'Engine', 'icon' => '', 'display' => 'detail' ),
+				array( 'sheet_col' => 'Color', 'meta_key' => '_vehicle_color', 'label' => 'Color', 'icon' => '', 'display' => 'detail' ),
 			),
 			'last_sync_time'     => '',
 			'last_sync_status'   => '',
