@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamic Sheet to Post Type Sync & Vehicle Product Grid
  * Description: Automatically imports and syncs Google Sheet vehicle inventory into WordPress posts/products with multi-column titles, Google Drive image gallery slider (AA & AB columns), responsive creative filters, 9-card pagination, and dedicated full vehicle information pages.
- * Version: 2.1.4
+ * Version: 2.1.5
  * Author: Eshmika Hettiarachchi
  * Text Domain: dynamic-sheet-sync
  * License: GPL2
@@ -935,9 +935,19 @@ class Dynamic_Sheet_Post_Sync {
 				});
 
 				// ==========================================================
-				// 2. CREATIVE FILTER & 9-CARD PAGINATION SYSTEM
+				// 2. CREATIVE FILTER & ALL / PAGINATED SYSTEM
 				// ==========================================================
-				var perPage = 9;
+				function getPerPageSetting() {
+					var $grid = $(".vehicle-grid");
+					if ($grid.length && $grid.data("per-page") !== undefined) {
+						var parsed = parseInt($grid.data("per-page"), 10);
+						if (!isNaN(parsed)) {
+							return parsed; // -1 means all, or any custom positive number
+						}
+					}
+					return -1; // Default to showing all vehicles
+				}
+
 				var currentPage = 1;
 
 				function getFilteredCards() {
@@ -970,9 +980,13 @@ class Dynamic_Sheet_Post_Sync {
 					return matching;
 				}
 
-				function renderPagination(totalMatches, activePage) {
+				function renderPagination(totalMatches, activePage, perPage) {
 					var $pagination = $(".vehicle-pagination-container");
 					$pagination.empty();
+
+					if (perPage <= 0 || perPage >= totalMatches) {
+						return; // All vehicles shown, no pagination buttons needed!
+					}
 
 					var totalPages = Math.ceil(totalMatches / perPage);
 					if (totalPages <= 1) {
@@ -1027,19 +1041,19 @@ class Dynamic_Sheet_Post_Sync {
 					var trans = $(".vehicle-filter-transmission").val();
 					var search = $(".vehicle-search-input").val();
 
-					var closeSvg = "<svg viewBox=\\"0 0 24 24\\" width=\\"9\\" height=\\"9\\" fill=\\"none\\" stroke=\\"currentColor\\" stroke-width=\\"2.5\\" stroke-linecap=\\"round\\" stroke-linejoin=\\"round\\"><line x1=\\"18\\" y1=\\"6\\" x2=\\"6\\" y2=\\"18\\"></line><line x1=\\"6\\" y1=\\"6\\" x2=\\"18\\" y2=\\"18\\"></line></svg>";
+					var closeSvg = "<svg viewBox=\"0 0 24 24\" width=\"9\" height=\"9\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"></line><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"></line></svg>";
 
 					if (search) {
-						$chipsContainer.append("<span class=\\"vehicle-chip\\">Search: " + search + " <span class=\\"vehicle-chip-remove\\" data-target=\\"search\\" title=\\"Remove search filter\\">" + closeSvg + "</span></span>");
+						$chipsContainer.append("<span class=\"vehicle-chip\">Search: " + search + " <span class=\"vehicle-chip-remove\" data-target=\"search\" title=\"Remove search filter\">" + closeSvg + "</span></span>");
 					}
 					if (fuel) {
-						$chipsContainer.append("<span class=\\"vehicle-chip\\">Fuel: " + fuel + " <span class=\\"vehicle-chip-remove\\" data-target=\\"fuel\\" title=\\"Remove fuel filter\\">" + closeSvg + "</span></span>");
+						$chipsContainer.append("<span class=\"vehicle-chip\">Fuel: " + fuel + " <span class=\"vehicle-chip-remove\" data-target=\"fuel\" title=\"Remove fuel filter\">" + closeSvg + "</span></span>");
 					}
 					if (year) {
-						$chipsContainer.append("<span class=\\"vehicle-chip\\">Year: " + year + " <span class=\\"vehicle-chip-remove\\" data-target=\\"year\\" title=\\"Remove year filter\\">" + closeSvg + "</span></span>");
+						$chipsContainer.append("<span class=\"vehicle-chip\">Year: " + year + " <span class=\"vehicle-chip-remove\" data-target=\"year\" title=\"Remove year filter\">" + closeSvg + "</span></span>");
 					}
 					if (trans) {
-						$chipsContainer.append("<span class=\\"vehicle-chip\\">Trans: " + trans + " <span class=\\"vehicle-chip-remove\\" data-target=\\"trans\\" title=\\"Remove transmission filter\\">" + closeSvg + "</span></span>");
+						$chipsContainer.append("<span class=\"vehicle-chip\">Trans: " + trans + " <span class=\"vehicle-chip-remove\" data-target=\"trans\" title=\"Remove transmission filter\">" + closeSvg + "</span></span>");
 					}
 				}
 
@@ -1048,21 +1062,24 @@ class Dynamic_Sheet_Post_Sync {
 						currentPage = 1;
 					}
 
+					var perPage = getPerPageSetting();
 					var matchingCards = getFilteredCards();
 					var totalMatches = matchingCards.length;
-					var totalPages = Math.ceil(totalMatches / perPage);
+					var isShowAll = (perPage <= 0 || perPage >= totalMatches);
+
+					var totalPages = isShowAll ? 1 : Math.ceil(totalMatches / perPage);
 
 					if (currentPage > totalPages && totalPages > 0) {
 						currentPage = totalPages;
 					}
 
-					var startIndex = (currentPage - 1) * perPage;
-					var endIndex = startIndex + perPage;
+					var startIndex = isShowAll ? 0 : (currentPage - 1) * perPage;
+					var endIndex = isShowAll ? totalMatches : startIndex + perPage;
 
 					// Hide all cards first
 					$(".vehicle-card").hide();
 
-					// Show only cards in current page slice
+					// Show cards in view (all or current page)
 					for (var i = 0; i < matchingCards.length; i++) {
 						if (i >= startIndex && i < endIndex) {
 							matchingCards[i].fadeIn(150);
@@ -1075,13 +1092,17 @@ class Dynamic_Sheet_Post_Sync {
 						$(".vehicle-count-badge").text("Showing 0 vehicles");
 					} else {
 						$(".vehicle-no-results").hide();
-						var startDisplay = startIndex + 1;
-						var endDisplay = Math.min(endIndex, totalMatches);
-						$(".vehicle-count-badge").text("Showing " + startDisplay + "–" + endDisplay + " of " + totalMatches + " vehicles");
+						if (isShowAll) {
+							$(".vehicle-count-badge").text("Showing all " + totalMatches + " vehicles");
+						} else {
+							var startDisplay = startIndex + 1;
+							var endDisplay = Math.min(endIndex, totalMatches);
+							$(".vehicle-count-badge").text("Showing " + startDisplay + "–" + endDisplay + " of " + totalMatches + " vehicles");
+						}
 					}
 
-					// Render Pagination buttons
-					renderPagination(totalMatches, currentPage);
+					// Render Pagination buttons if applicable
+					renderPagination(totalMatches, currentPage, perPage);
 					updateActiveChips();
 
 					// Toggle search clear button
@@ -2258,8 +2279,9 @@ class Dynamic_Sheet_Post_Sync {
 
 		$atts = shortcode_atts( array(
 			'columns'        => '1',
-			'per_page'       => '9',
-			'posts_per_page' => '-1', // Query all published vehicles so client-side filter and 9-card pagination work instantly
+			'per_page'       => '-1', // Default to -1 (show all vehicles) as requested
+			'posts_per_page' => '-1', // Query all vehicles
+			'post_status'    => 'publish,pending,draft,private,any',
 			'post_type'      => $default_pt,
 			'show_filter'    => 'yes',
 			'show_search'    => 'yes',
@@ -2268,10 +2290,21 @@ class Dynamic_Sheet_Post_Sync {
 			'order'          => 'DESC',
 		), $atts, 'vehicle_products' );
 
-		// Query vehicles.
+		// Query vehicles - ensure all synced vehicles are included regardless of status if requested.
+		$query_status = 'publish';
+		if ( ! empty( $atts['post_status'] ) ) {
+			if ( 'any' === trim( $atts['post_status'] ) ) {
+				$query_status = 'any';
+			} elseif ( strpos( $atts['post_status'], ',' ) !== false ) {
+				$query_status = array_map( 'trim', explode( ',', sanitize_text_field( $atts['post_status'] ) ) );
+			} else {
+				$query_status = sanitize_text_field( $atts['post_status'] );
+			}
+		}
+
 		$args = array(
 			'post_type'      => sanitize_key( $atts['post_type'] ),
-			'post_status'    => 'publish',
+			'post_status'    => $query_status,
 			'posts_per_page' => intval( $atts['posts_per_page'] ),
 			'orderby'        => sanitize_key( $atts['orderby'] ),
 			'order'          => sanitize_key( $atts['order'] ),
@@ -2561,10 +2594,12 @@ class Dynamic_Sheet_Post_Sync {
 
 		$cols = max( 1, min( 4, intval( $atts['columns'] ) ) );
 
+		$per_page_attr = intval( $atts['per_page'] );
+
 		// Final Output assembly.
 		$output  = '<div class="vehicle-grid-container">';
 		$output .= $filter_bar_html;
-		$output .= '<div class="vehicle-grid" style="--vg-cols: ' . esc_attr( $cols ) . ';">';
+		$output .= '<div class="vehicle-grid" data-per-page="' . esc_attr( $per_page_attr ) . '" style="--vg-cols: ' . esc_attr( $cols ) . ';">';
 		$output .= $cards_html;
 		$output .= '<div class="vehicle-no-results" style="display:none;">
 			<svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
