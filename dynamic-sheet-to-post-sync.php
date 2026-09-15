@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamic Sheet to Post Type Sync & Vehicle Product Grid
  * Description: Automatically imports and syncs Google Sheet vehicle inventory into WordPress posts/products with multi-column titles, Google Drive image gallery slider (AA & AB columns), responsive creative filters, 9-card pagination, and dedicated full vehicle information pages.
- * Version: 2.2.0
+ * Version: 2.2.1
  * Author: Eshmika Hettiarachchi
  * Text Domain: dynamic-sheet-sync
  * License: GPL2
@@ -1764,11 +1764,10 @@ class Dynamic_Sheet_Post_Sync {
 						<table class="repeater-table" id="custom-meta-repeater-table">
 							<thead>
 								<tr>
-									<th style="width: 22%;"><?php esc_html_e( 'Sheet Column (Header/Letter)', 'dynamic-sheet-sync' ); ?></th>
-									<th style="width: 22%;"><?php esc_html_e( 'WordPress Meta Key', 'dynamic-sheet-sync' ); ?></th>
-									<th style="width: 20%;"><?php esc_html_e( 'Display Label', 'dynamic-sheet-sync' ); ?></th>
-									<th style="width: 12%;"><?php esc_html_e( 'Icon / Emoji', 'dynamic-sheet-sync' ); ?></th>
-									<th style="width: 18%;"><?php esc_html_e( 'Show On Details Page', 'dynamic-sheet-sync' ); ?></th>
+									<th style="width: 25%;"><?php esc_html_e( 'Sheet Column (Header/Letter)', 'dynamic-sheet-sync' ); ?></th>
+									<th style="width: 25%;"><?php esc_html_e( 'WordPress Meta Key', 'dynamic-sheet-sync' ); ?></th>
+									<th style="width: 24%;"><?php esc_html_e( 'Display Label', 'dynamic-sheet-sync' ); ?></th>
+									<th style="width: 20%;"><?php esc_html_e( 'Show On Details Page', 'dynamic-sheet-sync' ); ?></th>
 									<th style="width: 6%; text-align: center;"><?php esc_html_e( 'Action', 'dynamic-sheet-sync' ); ?></th>
 								</tr>
 							</thead>
@@ -1788,9 +1787,6 @@ class Dynamic_Sheet_Post_Sync {
 											</td>
 											<td>
 												<input type="text" name="dynamic_sheet_sync_options[custom_meta][<?php echo intval( $index ); ?>][label]" value="<?php echo esc_attr( $row['label'] ); ?>" placeholder="e.g. Mileage" />
-											</td>
-											<td>
-												<input type="text" name="dynamic_sheet_sync_options[custom_meta][<?php echo intval( $index ); ?>][icon]" value="<?php echo esc_attr( isset( $row['icon'] ) ? $row['icon'] : '' ); ?>" placeholder="e.g. •" style="text-align: center;" />
 											</td>
 											<td>
 												<select name="dynamic_sheet_sync_options[custom_meta][<?php echo intval( $index ); ?>][display]">
@@ -1864,7 +1860,6 @@ class Dynamic_Sheet_Post_Sync {
 						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][sheet_col]" placeholder="e.g. Color or H" value="" /></td>' +
 						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][meta_key]" placeholder="e.g. _vehicle_color" value="" /></td>' +
 						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][label]" placeholder="e.g. Color" value="" /></td>' +
-						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][icon]" placeholder="e.g. •" style="text-align:center;" value="" /></td>' +
 						'<td>' +
 							'<select name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][display]">' +
 								'<option value="primary_spec">Full Specs Grid</option>' +
@@ -2208,7 +2203,6 @@ class Dynamic_Sheet_Post_Sync {
 			if ( '' !== $val && 'hidden' !== ( isset( $spec['display'] ) ? $spec['display'] : '' ) ) {
 				$all_specs[] = array(
 					'label' => $spec['label'],
-					'icon'  => ! empty( $spec['icon'] ) ? $spec['icon'] : '▪',
 					'value' => $val,
 				);
 			}
@@ -2282,9 +2276,6 @@ class Dynamic_Sheet_Post_Sync {
 						<?php endif; ?>
 						<?php foreach ( $all_specs as $s ) : ?>
 							<div class="vehicle-single-spec-card">
-								<?php if ( ! empty( $s['icon'] ) ) : ?>
-									<span class="vehicle-single-spec-icon"><?php echo esc_html( $s['icon'] ); ?></span>
-								<?php endif; ?>
 								<div>
 									<span class="vehicle-single-spec-label"><?php echo esc_html( $s['label'] ); ?></span>
 									<span class="vehicle-single-spec-val"><?php echo esc_html( $s['value'] ); ?></span>
