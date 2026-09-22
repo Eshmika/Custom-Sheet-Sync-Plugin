@@ -1,4 +1,4 @@
-# Dynamic Sheet to Post Type Sync & Vehicle Product Grid (v2.1)
+# Dynamic Sheet to Post Type Sync & Vehicle Product Grid (v2.3)
 
 A powerful WordPress plugin that automatically fetches and synchronizes **Google Sheet vehicle inventory** into WordPress posts/custom post types and showcases them in a modern, responsive **vehicle showroom catalog**.
 
@@ -31,7 +31,8 @@ A powerful WordPress plugin that automatically fetches and synchronizes **Google
   - Full image gallery with interactive thumbnail selector.
   - Breadcrumbs (`← Back to Inventory / Vehicle Name`).
   - Vehicle ID & Price highlight.
-  - Comprehensive specifications grid.
+  - **Vehicle Specifications (Main Details)**: Prominent top specifications card showing key highlights (Year, Mileage, Fuel, Gearbox).
+  - **Vehicle Overview & Features (Creative 4-Column Grid)**: Full 4-column responsive grid showcasing all vehicle details, technical specifications, comfort, safety, equipment, and feature tags.
   - Direct WhatsApp inquiry button with pre-filled vehicle details.
 
 ---

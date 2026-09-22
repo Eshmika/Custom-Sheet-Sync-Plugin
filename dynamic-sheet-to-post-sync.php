@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamic Sheet to Post Type Sync & Vehicle Product Grid
  * Description: Automatically imports and syncs Google Sheet vehicle inventory into WordPress posts/products with multi-column titles, Google Drive image gallery slider (AA & AB columns), responsive creative filters, 9-card pagination, and dedicated full vehicle information pages.
- * Version: 2.2.1
+ * Version: 2.2.3
  * Author: Eshmika Hettiarachchi
  * Text Domain: dynamic-sheet-sync
  * License: GPL2
@@ -867,19 +867,163 @@ class Dynamic_Sheet_Post_Sync {
 			}
 			.vehicle-single-btn-whatsapp:hover { background: #1eb956; transform: translateY(-1px); }
 
+			/* ==========================================================================
+			   CREATIVE 4-COLUMN VEHICLE OVERVIEW & FEATURES GRID
+			   ========================================================================== */
 			.vehicle-single-desc-section {
 				margin-top: 36px;
 				background: #ffffff;
 				border: 1px solid var(--vg-border);
 				border-radius: var(--vg-radius-lg);
-				padding: 28px;
-				box-shadow: var(--vg-shadow-sm);
+				padding: 32px 34px;
+				box-shadow: 0 4px 20px rgba(23, 10, 61, 0.05);
+				position: relative;
 			}
-			.vehicle-single-desc-section h3 {
-				font-size: 18px;
+			.vehicle-overview-header-row {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				border-bottom: 2px solid #f1f5f9;
+				padding-bottom: 16px;
+				margin-bottom: 22px;
+				flex-wrap: wrap;
+				gap: 10px;
+			}
+			.vehicle-overview-badge-title {
+				display: flex;
+				flex-direction: column;
+				gap: 4px;
+			}
+			.vehicle-overview-badge {
+				font-size: 11px;
 				font-weight: 700;
-				margin: 0 0 14px 0;
-				color: var(--vg-text-main);
+				letter-spacing: 0.8px;
+				text-transform: uppercase;
+				color: #5e359a;
+			}
+			.vehicle-overview-main-heading {
+				font-size: 22px;
+				font-weight: 800;
+				margin: 0 !important;
+				color: var(--vg-primary-dark);
+				letter-spacing: -0.3px;
+			}
+			.vehicle-overview-count-pill {
+				background: #f1f5f9;
+				color: #475569;
+				font-size: 12px;
+				font-weight: 700;
+				padding: 5px 14px;
+				border-radius: 20px;
+				border: 1px solid #e2e8f0;
+			}
+			.vehicle-overview-narrative {
+				color: #475569;
+				font-size: 14.5px;
+				line-height: 1.7;
+				margin-bottom: 24px;
+				padding-bottom: 20px;
+				border-bottom: 1px dashed #e2e8f0;
+			}
+			.vehicle-overview-grid {
+				display: grid;
+				grid-template-columns: repeat(4, 1fr);
+				gap: 16px;
+			}
+			@media (max-width: 1100px) {
+				.vehicle-overview-grid { grid-template-columns: repeat(3, 1fr); }
+			}
+			@media (max-width: 820px) {
+				.vehicle-overview-grid { grid-template-columns: repeat(2, 1fr); }
+			}
+			@media (max-width: 520px) {
+				.vehicle-overview-grid { grid-template-columns: 1fr; }
+				.vehicle-single-desc-section { padding: 20px 16px; }
+			}
+			.vehicle-overview-card {
+				background: #f8fafc;
+				border: 1px solid #e2e8f0;
+				border-radius: 12px;
+				padding: 16px;
+				display: flex;
+				gap: 14px;
+				align-items: flex-start;
+				transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+				position: relative;
+			}
+			.vehicle-overview-card::before {
+				content: "";
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				height: 3px;
+				background: linear-gradient(90deg, #3a1f62, #5e359a);
+				border-radius: 12px 12px 0 0;
+				opacity: 0;
+				transition: opacity 0.25s ease;
+			}
+			.vehicle-overview-card:hover {
+				background: #ffffff;
+				border-color: #cbd5e1;
+				box-shadow: 0 10px 22px -6px rgba(23, 10, 61, 0.1);
+				transform: translateY(-2px);
+			}
+			.vehicle-overview-card:hover::before {
+				opacity: 1;
+			}
+			.vehicle-overview-card-icon {
+				width: 38px;
+				height: 38px;
+				border-radius: 10px;
+				background: #ede9fe;
+				color: #5e359a;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+			}
+			.vehicle-overview-card-icon svg {
+				width: 18px;
+				height: 18px;
+				fill: currentColor;
+			}
+			.vehicle-overview-card-content {
+				flex: 1;
+				min-width: 0;
+			}
+			.vehicle-overview-card-label {
+				font-size: 11px;
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.6px;
+				color: #64748b;
+				display: block;
+				margin-bottom: 4px;
+			}
+			.vehicle-overview-card-val {
+				font-size: 14px;
+				font-weight: 700;
+				color: #0f172a;
+				line-height: 1.35;
+				word-break: break-word;
+				display: block;
+			}
+			.vehicle-feature-chips {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 4px;
+				margin-top: 4px;
+			}
+			.vehicle-feature-chip {
+				background: #ede9fe;
+				color: #4c1d95;
+				font-size: 11.5px;
+				font-weight: 600;
+				padding: 2px 8px;
+				border-radius: 6px;
+				border: 1px solid #ddd6fe;
+				display: inline-block;
 			}
 		' );
 
@@ -1309,8 +1453,36 @@ class Dynamic_Sheet_Post_Sync {
 				$icon      = isset( $row['icon'] ) ? sanitize_text_field( trim( $row['icon'] ) ) : '';
 				$display   = isset( $row['display'] ) ? sanitize_text_field( trim( $row['display'] ) ) : 'primary_spec';
 
-				if ( ! empty( $sheet_col ) && ! empty( $meta_key ) ) {
+				if ( ! empty( $sheet_col ) ) {
+					if ( empty( $meta_key ) ) {
+						$meta_key = '_vehicle_' . sanitize_key( $sheet_col );
+					}
 					$output['custom_meta'][] = array(
+						'sheet_col' => $sheet_col,
+						'meta_key'  => $meta_key,
+						'label'     => ! empty( $label ) ? $label : $sheet_col,
+						'icon'      => $icon,
+						'display'   => $display,
+					);
+				}
+			}
+		}
+
+		// Vehicle Overview & Features Mapping (4-Column Grid Repeater).
+		$output['overview_meta'] = array();
+		if ( isset( $input['overview_meta'] ) && is_array( $input['overview_meta'] ) ) {
+			foreach ( $input['overview_meta'] as $row ) {
+				$sheet_col = isset( $row['sheet_col'] ) ? sanitize_text_field( trim( $row['sheet_col'] ) ) : '';
+				$meta_key  = isset( $row['meta_key'] ) ? sanitize_key( trim( $row['meta_key'] ) ) : '';
+				$label     = isset( $row['label'] ) ? sanitize_text_field( trim( $row['label'] ) ) : '';
+				$icon      = isset( $row['icon'] ) ? sanitize_text_field( trim( $row['icon'] ) ) : 'auto';
+				$display   = isset( $row['display'] ) ? sanitize_text_field( trim( $row['display'] ) ) : 'grid';
+
+				if ( ! empty( $sheet_col ) ) {
+					if ( empty( $meta_key ) ) {
+						$meta_key = '_vehicle_ov_' . sanitize_key( $sheet_col );
+					}
+					$output['overview_meta'][] = array(
 						'sheet_col' => $sheet_col,
 						'meta_key'  => $meta_key,
 						'label'     => ! empty( $label ) ? $label : $sheet_col,
@@ -1522,6 +1694,78 @@ class Dynamic_Sheet_Post_Sync {
 	}
 
 	/**
+	 * Get creative SVG icon corresponding to vehicle specification or feature category.
+	 */
+	public static function get_feature_icon_svg( $label = '', $preferred_icon = '' ) {
+		$icon = strtolower( trim( $preferred_icon ) );
+		$l    = strtolower( trim( $label ) );
+
+		if ( empty( $icon ) || 'auto' === $icon ) {
+			if ( stripos( $l, 'engine' ) !== false || stripos( $l, 'cc' ) !== false || stripos( $l, 'power' ) !== false || stripos( $l, 'hp' ) !== false || stripos( $l, 'kw' ) !== false || stripos( $l, 'motor' ) !== false ) {
+				$icon = 'engine';
+			} elseif ( stripos( $l, 'gear' ) !== false || stripos( $l, 'trans' ) !== false || stripos( $l, 'speed' ) !== false || stripos( $l, 'clutch' ) !== false ) {
+				$icon = 'gearbox';
+			} elseif ( stripos( $l, 'fuel' ) !== false || stripos( $l, 'petrol' ) !== false || stripos( $l, 'diesel' ) !== false || stripos( $l, 'hybrid' ) !== false || stripos( $l, 'electric' ) !== false || stripos( $l, 'mpg' ) !== false || stripos( $l, 'economy' ) !== false ) {
+				$icon = 'fuel';
+			} elseif ( stripos( $l, 'mileage' ) !== false || stripos( $l, 'km' ) !== false || stripos( $l, 'odo' ) !== false ) {
+				$icon = 'mileage';
+			} elseif ( stripos( $l, 'drive' ) !== false || stripos( $l, 'awd' ) !== false || stripos( $l, '4wd' ) !== false || stripos( $l, 'fwd' ) !== false || stripos( $l, 'rwd' ) !== false || stripos( $l, 'wheel' ) !== false ) {
+				$icon = 'drive';
+			} elseif ( stripos( $l, 'body' ) !== false || stripos( $l, 'style' ) !== false || stripos( $l, 'type' ) !== false || stripos( $l, 'chassis' ) !== false ) {
+				$icon = 'body';
+			} elseif ( stripos( $l, 'paint' ) !== false || stripos( $l, 'color' ) !== false || stripos( $l, 'colour' ) !== false ) {
+				$icon = 'color';
+			} elseif ( stripos( $l, 'interior' ) !== false || stripos( $l, 'upholstery' ) !== false || stripos( $l, 'leather' ) !== false ) {
+				$icon = 'interior';
+			} elseif ( stripos( $l, 'seat' ) !== false || stripos( $l, 'capacity' ) !== false ) {
+				$icon = 'seat';
+			} elseif ( stripos( $l, 'door' ) !== false ) {
+				$icon = 'door';
+			} elseif ( stripos( $l, 'year' ) !== false || stripos( $l, 'date' ) !== false || stripos( $l, 'reg' ) !== false ) {
+				$icon = 'year';
+			} elseif ( stripos( $l, 'vin' ) !== false || stripos( $l, 'chassis' ) !== false || stripos( $l, 'security' ) !== false || stripos( $l, 'safety' ) !== false || stripos( $l, 'airbag' ) !== false ) {
+				$icon = 'shield';
+			} elseif ( stripos( $l, 'feature' ) !== false || stripos( $l, 'option' ) !== false || stripos( $l, 'equipment' ) !== false || stripos( $l, 'sunroof' ) !== false || stripos( $l, 'camera' ) !== false ) {
+				$icon = 'star';
+			} else {
+				$icon = 'check';
+			}
+		}
+
+		switch ( $icon ) {
+			case 'engine':
+				return '<svg viewBox="0 0 24 24"><path d="M7 4V2h10v2h2v3h-2v2h2v4h-2v3h2v2h-2v2H7v-2H5v-2h2v-3H5v-4h2V9H5V7h2V4m2 1h6v1H9V5m-1 3v8h8V8H8m2 2h4v1h-4v-1m0 3h4v1h-4v-1z"/></svg>';
+			case 'gearbox':
+				return '<svg viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97 0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1 0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66z"/></svg>';
+			case 'fuel':
+				return '<svg viewBox="0 0 24 24"><path d="M19.77 7.23l.01-.01-3.72-3.72L15 4.56l2.11 2.11c-.94.36-1.61 1.26-1.61 2.33a2.5 2.5 0 0 0 2.5 2.5c.36 0 .69-.1.99-.28l1.78 1.78V18c0 .55-.45 1-1 1s-1-.45-1-1v-4c0-1.1-.9-2-2-2h-1V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2v-5h1v4c0 1.66 1.34 3 3 3s3-1.34 3-3V8.83c0-.43-.17-.84-.47-1.14l-.76-.46zM13 11H5V5h8v6z"/></svg>';
+			case 'mileage':
+				return '<svg viewBox="0 0 24 24"><path d="M12 2A10 10 0 0 0 2 12a10 10 0 0 0 10 10 10 10 0 0 0 10-10A10 10 0 0 0 12 2m0 18a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8m3.5-12.5L11 11.07V7h2v3.08l3.75-2.25.75 1.67z"/></svg>';
+			case 'drive':
+				return '<svg viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m0 2v5h5V5H5m7 0v5h7V5h-7m-7 7v5h5v-5H5m7 0v5h7v-5h-7z"/></svg>';
+			case 'body':
+				return '<svg viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>';
+			case 'color':
+				return '<svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.18 19.35 10.54 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9m-5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m3.5-3.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m3.5 3.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>';
+			case 'interior':
+				return '<svg viewBox="0 0 24 24"><path d="M4 18v3h3v-3h10v3h3v-3c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2h-1V4c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v7c0 1.1.9 2 2 2m3-14h10v3H7V4m-3 5h16v7H4V9z"/></svg>';
+			case 'door':
+				return '<svg viewBox="0 0 24 24"><path d="M19 2H5c-1.1 0-2 .9-2 2v17h2v-1h14v1h2V4c0-1.1-.9-2-2-2m-2 16H7V4h10v14m-4-7a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>';
+			case 'seat':
+				return '<svg viewBox="0 0 24 24"><path d="M7 18v3h2v-3h6v3h2v-3h1c1.1 0 2-.9 2-2v-5c0-1.1-.9-2-2-2h-1V5c0-1.66-1.34-3-3-3H9C7.34 2 6 3.34 6 5v4H5c-1.1 0-2 .9-2 2v5c0 1.1.9 2 2 2h2m1-13c0-.55.45-1 1-1h6c.55 0 1 .45 1 1v4H8V5m-3 6h14v5H5v-5z"/></svg>';
+			case 'year':
+				return '<svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2m0 16H5V10h14v10m0-12H5V6h14v2m-7 5h5v5h-5v-5z"/></svg>';
+			case 'shield':
+				return '<svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 6h2v2h-2V7zm0 4h2v6h-2v-6z"/></svg>';
+			case 'star':
+				return '<svg viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>';
+			case 'check':
+			default:
+				return '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>';
+		}
+	}
+
+	/**
 	 * Render settings page template with tabs and modern controls.
 	 */
 	public function render_settings_page() {
@@ -1551,12 +1795,31 @@ class Dynamic_Sheet_Post_Sync {
 		// Default initial vehicle custom meta rows if empty.
 		if ( empty( $custom_meta ) ) {
 			$custom_meta = array(
-				array( 'sheet_col' => 'Year', 'meta_key' => '_vehicle_year', 'label' => 'Year', 'icon' => '', 'display' => 'badge' ),
+				array( 'sheet_col' => 'Year', 'meta_key' => '_vehicle_year', 'label' => 'Year', 'icon' => '', 'display' => 'primary_spec' ),
 				array( 'sheet_col' => 'F', 'meta_key' => '_vehicle_mileage', 'label' => 'Mileage', 'icon' => '', 'display' => 'primary_spec' ),
 				array( 'sheet_col' => 'Fuel Type', 'meta_key' => '_vehicle_fuel', 'label' => 'Fuel', 'icon' => '', 'display' => 'primary_spec' ),
 				array( 'sheet_col' => 'Transmission', 'meta_key' => '_vehicle_transmission', 'label' => 'Gearbox', 'icon' => '', 'display' => 'primary_spec' ),
-				array( 'sheet_col' => 'Engine', 'meta_key' => '_vehicle_engine', 'label' => 'Engine', 'icon' => '', 'display' => 'detail' ),
-				array( 'sheet_col' => 'Color', 'meta_key' => '_vehicle_color', 'label' => 'Color', 'icon' => '', 'display' => 'detail' ),
+				array( 'sheet_col' => 'Engine', 'meta_key' => '_vehicle_engine', 'label' => 'Engine', 'icon' => '', 'display' => 'primary_spec' ),
+				array( 'sheet_col' => 'Color', 'meta_key' => '_vehicle_color', 'label' => 'Color', 'icon' => '', 'display' => 'primary_spec' ),
+			);
+		}
+
+		$overview_meta = isset( $options['overview_meta'] ) && is_array( $options['overview_meta'] ) ? $options['overview_meta'] : array();
+		// Default initial vehicle overview & features rows if empty.
+		if ( empty( $overview_meta ) ) {
+			$overview_meta = array(
+				array( 'sheet_col' => 'Engine', 'meta_key' => '_vehicle_ov_engine', 'label' => 'Engine Capacity / Power', 'icon' => 'engine' ),
+				array( 'sheet_col' => 'Transmission', 'meta_key' => '_vehicle_ov_transmission', 'label' => 'Transmission', 'icon' => 'gearbox' ),
+				array( 'sheet_col' => 'Fuel Type', 'meta_key' => '_vehicle_ov_fuel', 'label' => 'Fuel Type', 'icon' => 'fuel' ),
+				array( 'sheet_col' => 'Drive Type', 'meta_key' => '_vehicle_ov_drive', 'label' => 'Drivetrain', 'icon' => 'drive' ),
+				array( 'sheet_col' => 'Body Style', 'meta_key' => '_vehicle_ov_body', 'label' => 'Body Style', 'icon' => 'body' ),
+				array( 'sheet_col' => 'Color', 'meta_key' => '_vehicle_ov_ext_color', 'label' => 'Exterior Color', 'icon' => 'color' ),
+				array( 'sheet_col' => 'Interior', 'meta_key' => '_vehicle_ov_int_color', 'label' => 'Interior & Seats', 'icon' => 'interior' ),
+				array( 'sheet_col' => 'Doors', 'meta_key' => '_vehicle_ov_doors', 'label' => 'Doors', 'icon' => 'door' ),
+				array( 'sheet_col' => 'Seats', 'meta_key' => '_vehicle_ov_seats', 'label' => 'Seating Capacity', 'icon' => 'seat' ),
+				array( 'sheet_col' => 'Condition', 'meta_key' => '_vehicle_ov_condition', 'label' => 'Condition', 'icon' => 'check' ),
+				array( 'sheet_col' => 'VIN', 'meta_key' => '_vehicle_ov_vin', 'label' => 'VIN / Chassis No', 'icon' => 'shield' ),
+				array( 'sheet_col' => 'Features', 'meta_key' => '_vehicle_ov_features', 'label' => 'Equipment & Options', 'icon' => 'star' ),
 			);
 		}
 
@@ -1569,7 +1832,7 @@ class Dynamic_Sheet_Post_Sync {
 						<h1><?php esc_html_e( 'Vehicle Sheet Sync & Product Catalog', 'dynamic-sheet-sync' ); ?></h1>
 						<p style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;"><?php esc_html_e( 'Seamlessly import vehicle inventory from Google Sheets and display as high-converting vehicle showcase cards with Google Drive image sliders and dedicated detail pages.', 'dynamic-sheet-sync' ); ?></p>
 					</div>
-					<span class="sheet-sync-badge">v2.1 PRO</span>
+					<span class="sheet-sync-badge">v2.3 PRO</span>
 				</div>
 
 				<?php settings_errors(); ?>
@@ -1607,9 +1870,10 @@ class Dynamic_Sheet_Post_Sync {
 
 				<!-- Navigation Tabs -->
 				<div class="sheet-nav-tabs">
-					<a class="sheet-nav-tab active" data-tab="tab-sheet-config"><?php esc_html_e( 'Sheet & Column Mapping', 'dynamic-sheet-sync' ); ?></a>
-					<a class="sheet-nav-tab" data-tab="tab-specs-repeater"><?php esc_html_e( 'Vehicle Specs & Meta Attributes', 'dynamic-sheet-sync' ); ?></a>
-					<a class="sheet-nav-tab" data-tab="tab-shortcodes"><?php esc_html_e( 'Frontend Shortcodes & Showcase', 'dynamic-sheet-sync' ); ?></a>
+					<a class="sheet-nav-tab active" data-tab="tab-sheet-config"><?php esc_html_e( '1. Sheet & Column Mapping', 'dynamic-sheet-sync' ); ?></a>
+					<a class="sheet-nav-tab" data-tab="tab-specs-repeater"><?php esc_html_e( '2. Vehicle Specifications (Main Specs)', 'dynamic-sheet-sync' ); ?></a>
+					<a class="sheet-nav-tab" data-tab="tab-overview-repeater"><?php esc_html_e( '3. Vehicle Overview & Features (4-Col Grid)', 'dynamic-sheet-sync' ); ?></a>
+					<a class="sheet-nav-tab" data-tab="tab-shortcodes"><?php esc_html_e( '4. Frontend Shortcodes & Showcase', 'dynamic-sheet-sync' ); ?></a>
 				</div>
 
 				<!-- Settings Form -->
@@ -1751,12 +2015,12 @@ class Dynamic_Sheet_Post_Sync {
 						</table>
 					</div>
 
-					<!-- TAB 2: SPECS & META REPEATER -->
+					<!-- TAB 2: SPECS & META REPEATER (MAIN DETAILS) -->
 					<div class="sheet-tab-panel" id="tab-specs-repeater">
 						<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
 							<div>
-								<h3 style="margin:0 0 4px 0; font-size: 16px;"><?php esc_html_e( 'Vehicle Specs & Custom Attributes Mapping', 'dynamic-sheet-sync' ); ?></h3>
-								<p class="description" style="margin:0;"><?php esc_html_e( 'Map Google Sheet columns to vehicle specs to filter inventory and show comprehensive specs on the vehicle detail page.', 'dynamic-sheet-sync' ); ?></p>
+								<h3 style="margin:0 0 4px 0; font-size: 16px;"><?php esc_html_e( 'Vehicle Specifications (Main Details Mapping)', 'dynamic-sheet-sync' ); ?></h3>
+								<p class="description" style="margin:0;"><?php esc_html_e( 'Map Google Sheet columns to show as primary highlights in the top Vehicle Specifications card next to the photo gallery (e.g. Year, Mileage, Fuel, Gearbox).', 'dynamic-sheet-sync' ); ?></p>
 							</div>
 							<button type="button" class="button button-secondary" id="btn-add-meta-row">+ <?php esc_html_e( 'Add Spec Column', 'dynamic-sheet-sync' ); ?></button>
 						</div>
@@ -1764,10 +2028,10 @@ class Dynamic_Sheet_Post_Sync {
 						<table class="repeater-table" id="custom-meta-repeater-table">
 							<thead>
 								<tr>
-									<th style="width: 25%;"><?php esc_html_e( 'Sheet Column (Header/Letter)', 'dynamic-sheet-sync' ); ?></th>
-									<th style="width: 25%;"><?php esc_html_e( 'WordPress Meta Key', 'dynamic-sheet-sync' ); ?></th>
+									<th style="width: 26%;"><?php esc_html_e( 'Sheet Column (Header/Letter)', 'dynamic-sheet-sync' ); ?></th>
+									<th style="width: 26%;"><?php esc_html_e( 'WordPress Meta Key', 'dynamic-sheet-sync' ); ?></th>
 									<th style="width: 24%;"><?php esc_html_e( 'Display Label', 'dynamic-sheet-sync' ); ?></th>
-									<th style="width: 20%;"><?php esc_html_e( 'Show On Details Page', 'dynamic-sheet-sync' ); ?></th>
+									<th style="width: 18%;"><?php esc_html_e( 'Display Location', 'dynamic-sheet-sync' ); ?></th>
 									<th style="width: 6%; text-align: center;"><?php esc_html_e( 'Action', 'dynamic-sheet-sync' ); ?></th>
 								</tr>
 							</thead>
@@ -1780,7 +2044,7 @@ class Dynamic_Sheet_Post_Sync {
 										?>
 										<tr class="repeater-row">
 											<td>
-												<input type="text" name="dynamic_sheet_sync_options[custom_meta][<?php echo intval( $index ); ?>][sheet_col]" value="<?php echo esc_attr( $row['sheet_col'] ); ?>" placeholder="e.g. Mileage or H" />
+												<input type="text" name="dynamic_sheet_sync_options[custom_meta][<?php echo intval( $index ); ?>][sheet_col]" value="<?php echo esc_attr( $row['sheet_col'] ); ?>" placeholder="e.g. Mileage or F" />
 											</td>
 											<td>
 												<input type="text" name="dynamic_sheet_sync_options[custom_meta][<?php echo intval( $index ); ?>][meta_key]" value="<?php echo esc_attr( $row['meta_key'] ); ?>" placeholder="e.g. _vehicle_mileage" />
@@ -1790,9 +2054,7 @@ class Dynamic_Sheet_Post_Sync {
 											</td>
 											<td>
 												<select name="dynamic_sheet_sync_options[custom_meta][<?php echo intval( $index ); ?>][display]">
-													<option value="primary_spec" <?php selected( $disp, 'primary_spec' ); ?>><?php esc_html_e( 'Full Specs Grid', 'dynamic-sheet-sync' ); ?></option>
-													<option value="badge" <?php selected( $disp, 'badge' ); ?>><?php esc_html_e( 'Highlight Spec', 'dynamic-sheet-sync' ); ?></option>
-													<option value="detail" <?php selected( $disp, 'detail' ); ?>><?php esc_html_e( 'Details Table', 'dynamic-sheet-sync' ); ?></option>
+													<option value="primary_spec" <?php selected( $disp, 'primary_spec' ); ?>><?php esc_html_e( 'Vehicle Specifications (Main)', 'dynamic-sheet-sync' ); ?></option>
 													<option value="hidden" <?php selected( $disp, 'hidden' ); ?>><?php esc_html_e( 'Hidden (Meta Only)', 'dynamic-sheet-sync' ); ?></option>
 												</select>
 											</td>
@@ -1809,7 +2071,73 @@ class Dynamic_Sheet_Post_Sync {
 						</table>
 					</div>
 
-					<!-- TAB 3: SHORTCODE GENERATOR & SHOWCASE -->
+					<!-- TAB 3: OVERVIEW & FEATURES REPEATER (4-COLUMN GRID) -->
+					<div class="sheet-tab-panel" id="tab-overview-repeater">
+						<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+							<div>
+								<h3 style="margin:0 0 4px 0; font-size: 16px;"><?php esc_html_e( 'Vehicle Overview & Features (4-Column Grid Mapping)', 'dynamic-sheet-sync' ); ?></h3>
+								<p class="description" style="margin:0;"><?php esc_html_e( 'Map Google Sheet columns to display in the modern 4-column creative grid under "Vehicle Overview & Features". Displays all car details, equipment, comfort, safety, and full technical specifications.', 'dynamic-sheet-sync' ); ?></p>
+							</div>
+							<button type="button" class="button button-secondary" id="btn-add-overview-row">+ <?php esc_html_e( 'Add Overview & Feature Column', 'dynamic-sheet-sync' ); ?></button>
+						</div>
+
+						<table class="repeater-table" id="overview-meta-repeater-table">
+							<thead>
+								<tr>
+									<th style="width: 25%;"><?php esc_html_e( 'Sheet Column (Header/Letter)', 'dynamic-sheet-sync' ); ?></th>
+									<th style="width: 25%;"><?php esc_html_e( 'WordPress Meta Key', 'dynamic-sheet-sync' ); ?></th>
+									<th style="width: 24%;"><?php esc_html_e( 'Display Label', 'dynamic-sheet-sync' ); ?></th>
+									<th style="width: 20%;"><?php esc_html_e( 'Icon / Category', 'dynamic-sheet-sync' ); ?></th>
+									<th style="width: 6%; text-align: center;"><?php esc_html_e( 'Action', 'dynamic-sheet-sync' ); ?></th>
+								</tr>
+							</thead>
+							<tbody>
+								<?php
+								$ov_index = 0;
+								if ( ! empty( $overview_meta ) ) :
+									foreach ( $overview_meta as $ov_row ) :
+										$ov_icon = isset( $ov_row['icon'] ) ? $ov_row['icon'] : 'auto';
+										?>
+										<tr class="repeater-row">
+											<td>
+												<input type="text" name="dynamic_sheet_sync_options[overview_meta][<?php echo intval( $ov_index ); ?>][sheet_col]" value="<?php echo esc_attr( $ov_row['sheet_col'] ); ?>" placeholder="e.g. Engine or M" />
+											</td>
+											<td>
+												<input type="text" name="dynamic_sheet_sync_options[overview_meta][<?php echo intval( $ov_index ); ?>][meta_key]" value="<?php echo esc_attr( $ov_row['meta_key'] ); ?>" placeholder="e.g. _vehicle_ov_engine" />
+											</td>
+											<td>
+												<input type="text" name="dynamic_sheet_sync_options[overview_meta][<?php echo intval( $ov_index ); ?>][label]" value="<?php echo esc_attr( $ov_row['label'] ); ?>" placeholder="e.g. Engine Capacity" />
+											</td>
+											<td>
+												<select name="dynamic_sheet_sync_options[overview_meta][<?php echo intval( $ov_index ); ?>][icon]">
+													<option value="auto" <?php selected( $ov_icon, 'auto' ); ?>><?php esc_html_e( 'Auto Detect Icon', 'dynamic-sheet-sync' ); ?></option>
+													<option value="engine" <?php selected( $ov_icon, 'engine' ); ?>><?php esc_html_e( 'Engine / Power', 'dynamic-sheet-sync' ); ?></option>
+													<option value="gearbox" <?php selected( $ov_icon, 'gearbox' ); ?>><?php esc_html_e( 'Transmission / Gearbox', 'dynamic-sheet-sync' ); ?></option>
+													<option value="fuel" <?php selected( $ov_icon, 'fuel' ); ?>><?php esc_html_e( 'Fuel Type / Economy', 'dynamic-sheet-sync' ); ?></option>
+													<option value="drive" <?php selected( $ov_icon, 'drive' ); ?>><?php esc_html_e( 'Drivetrain (4WD/AWD)', 'dynamic-sheet-sync' ); ?></option>
+													<option value="body" <?php selected( $ov_icon, 'body' ); ?>><?php esc_html_e( 'Body Style / Chassis', 'dynamic-sheet-sync' ); ?></option>
+													<option value="color" <?php selected( $ov_icon, 'color' ); ?>><?php esc_html_e( 'Exterior Paint / Color', 'dynamic-sheet-sync' ); ?></option>
+													<option value="interior" <?php selected( $ov_icon, 'interior' ); ?>><?php esc_html_e( 'Interior & Seats', 'dynamic-sheet-sync' ); ?></option>
+													<option value="door" <?php selected( $ov_icon, 'door' ); ?>><?php esc_html_e( 'Doors', 'dynamic-sheet-sync' ); ?></option>
+													<option value="seat" <?php selected( $ov_icon, 'seat' ); ?>><?php esc_html_e( 'Seats / Capacity', 'dynamic-sheet-sync' ); ?></option>
+													<option value="shield" <?php selected( $ov_icon, 'shield' ); ?>><?php esc_html_e( 'VIN / Safety / Security', 'dynamic-sheet-sync' ); ?></option>
+													<option value="star" <?php selected( $ov_icon, 'star' ); ?>><?php esc_html_e( 'Features / Equipment', 'dynamic-sheet-sync' ); ?></option>
+												</select>
+											</td>
+											<td style="text-align: center; vertical-align: middle;">
+												<span class="btn-remove-row" title="<?php esc_attr_e( 'Remove Row', 'dynamic-sheet-sync' ); ?>">&times;</span>
+											</td>
+										</tr>
+										<?php
+										$ov_index++;
+									endforeach;
+								endif;
+								?>
+							</tbody>
+						</table>
+					</div>
+
+					<!-- TAB 4: SHORTCODE GENERATOR & SHOWCASE -->
 					<div class="sheet-tab-panel" id="tab-shortcodes">
 						<h3 style="margin: 0 0 8px 0; font-size: 16px;"><?php esc_html_e( 'Vehicle Showcase Shortcodes', 'dynamic-sheet-sync' ); ?></h3>
 						<p style="color: #64748b; font-size: 13.5px; margin-bottom: 20px;">
@@ -1854,17 +2182,15 @@ class Dynamic_Sheet_Post_Sync {
 
 				var rowIndex = <?php echo intval( $index ); ?>;
 
-				// Click handler to append a new metadata field mapping row.
+				// Click handler to append a new metadata field mapping row for Vehicle Specifications.
 				$('#btn-add-meta-row').on('click', function() {
 					var html = '<tr class="repeater-row">' +
-						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][sheet_col]" placeholder="e.g. Color or H" value="" /></td>' +
-						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][meta_key]" placeholder="e.g. _vehicle_color" value="" /></td>' +
-						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][label]" placeholder="e.g. Color" value="" /></td>' +
+						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][sheet_col]" placeholder="e.g. Mileage or F" value="" /></td>' +
+						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][meta_key]" placeholder="e.g. _vehicle_mileage" value="" /></td>' +
+						'<td><input type="text" name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][label]" placeholder="e.g. Mileage" value="" /></td>' +
 						'<td>' +
 							'<select name="dynamic_sheet_sync_options[custom_meta][' + rowIndex + '][display]">' +
-								'<option value="primary_spec">Full Specs Grid</option>' +
-								'<option value="badge">Highlight Spec</option>' +
-								'<option value="detail">Details Table</option>' +
+								'<option value="primary_spec">Vehicle Specifications (Main)</option>' +
 								'<option value="hidden">Hidden (Meta Only)</option>' +
 							'</select>' +
 						'</td>' +
@@ -1874,8 +2200,38 @@ class Dynamic_Sheet_Post_Sync {
 					rowIndex++;
 				});
 
-				// Event delegation for removal.
-				$('#custom-meta-repeater-table').on('click', '.btn-remove-row', function() {
+				var ovRowIndex = <?php echo intval( $ov_index ); ?>;
+
+				// Click handler to append a new row for Vehicle Overview & Features (4-Col Grid).
+				$('#btn-add-overview-row').on('click', function() {
+					var html = '<tr class="repeater-row">' +
+						'<td><input type="text" name="dynamic_sheet_sync_options[overview_meta][' + ovRowIndex + '][sheet_col]" placeholder="e.g. Engine or M" value="" /></td>' +
+						'<td><input type="text" name="dynamic_sheet_sync_options[overview_meta][' + ovRowIndex + '][meta_key]" placeholder="e.g. _vehicle_ov_engine" value="" /></td>' +
+						'<td><input type="text" name="dynamic_sheet_sync_options[overview_meta][' + ovRowIndex + '][label]" placeholder="e.g. Engine Capacity" value="" /></td>' +
+						'<td>' +
+							'<select name="dynamic_sheet_sync_options[overview_meta][' + ovRowIndex + '][icon]">' +
+								'<option value="auto">Auto Detect Icon</option>' +
+								'<option value="engine">Engine / Power</option>' +
+								'<option value="gearbox">Transmission / Gearbox</option>' +
+								'<option value="fuel">Fuel Type / Economy</option>' +
+								'<option value="drive">Drivetrain (4WD/AWD)</option>' +
+								'<option value="body">Body Style / Chassis</option>' +
+								'<option value="color">Exterior Paint / Color</option>' +
+								'<option value="interior">Interior & Seats</option>' +
+								'<option value="door">Doors</option>' +
+								'<option value="seat">Seats / Capacity</option>' +
+								'<option value="shield">VIN / Safety / Security</option>' +
+								'<option value="star">Features / Equipment</option>' +
+							'</select>' +
+						'</td>' +
+						'<td style="text-align: center; vertical-align: middle;"><span class="btn-remove-row">&times;</span></td>' +
+						'</tr>';
+					$('#overview-meta-repeater-table tbody').append(html);
+					ovRowIndex++;
+				});
+
+				// Event delegation for removal on both tables.
+				$(document).on('click', '.btn-remove-row', function() {
 					$(this).closest('tr').remove();
 				});
 			});
@@ -1991,13 +2347,26 @@ class Dynamic_Sheet_Post_Sync {
 		$image_index     = self::resolve_col_index( $field_image_col, $headers );
 		$sub_image_index = self::resolve_col_index( $field_sub_img_col, $headers );
 
-		// Custom Meta mapping resolution.
+		// Custom Meta mapping resolution (Vehicle Specifications).
 		$custom_meta_mappings = isset( $options['custom_meta'] ) && is_array( $options['custom_meta'] ) ? $options['custom_meta'] : array();
 		$custom_meta_resolved = array();
 		foreach ( $custom_meta_mappings as $mapping ) {
 			$idx = self::resolve_col_index( $mapping['sheet_col'], $headers );
 			if ( false !== $idx ) {
 				$custom_meta_resolved[] = array(
+					'index'    => $idx,
+					'meta_key' => $mapping['meta_key'],
+				);
+			}
+		}
+
+		// Vehicle Overview & Features mapping resolution.
+		$overview_meta_mappings = isset( $options['overview_meta'] ) && is_array( $options['overview_meta'] ) ? $options['overview_meta'] : array();
+		$overview_meta_resolved = array();
+		foreach ( $overview_meta_mappings as $mapping ) {
+			$idx = self::resolve_col_index( $mapping['sheet_col'], $headers );
+			if ( false !== $idx ) {
+				$overview_meta_resolved[] = array(
 					'index'    => $idx,
 					'meta_key' => $mapping['meta_key'],
 				);
@@ -2132,8 +2501,14 @@ class Dynamic_Sheet_Post_Sync {
 					update_post_meta( $post_id, '_vehicle_stock_status', $raw_status_val );
 				}
 
-				// Process Custom Meta Fields.
+				// Process Custom Meta Fields (Vehicle Specifications).
 				foreach ( $custom_meta_resolved as $mapping ) {
+					$meta_value = isset( $row_data[$mapping['index']] ) ? sanitize_text_field( trim( $row_data[$mapping['index']] ) ) : '';
+					update_post_meta( $post_id, $mapping['meta_key'], $meta_value );
+				}
+
+				// Process Vehicle Overview & Features Meta Fields.
+				foreach ( $overview_meta_resolved as $mapping ) {
 					$meta_value = isset( $row_data[$mapping['index']] ) ? sanitize_text_field( trim( $row_data[$mapping['index']] ) ) : '';
 					update_post_meta( $post_id, $mapping['meta_key'], $meta_value );
 				}
@@ -2196,7 +2571,7 @@ class Dynamic_Sheet_Post_Sync {
 
 		$main_image = ! empty( $gallery[0] ) ? $gallery[0] : '';
 
-		// Collect specs.
+		// Collect main specs for top section (Vehicle Specifications).
 		$all_specs = array();
 		foreach ( $custom_meta as $spec ) {
 			$val = get_post_meta( $post_id, $spec['meta_key'], true );
@@ -2204,8 +2579,28 @@ class Dynamic_Sheet_Post_Sync {
 				$all_specs[] = array(
 					'label' => $spec['label'],
 					'value' => $val,
+					'icon'  => isset( $spec['icon'] ) ? $spec['icon'] : '',
 				);
 			}
+		}
+
+		// Collect overview & features for bottom section (Vehicle Overview & Features - 4 Column Grid).
+		$overview_meta = isset( $options['overview_meta'] ) && is_array( $options['overview_meta'] ) ? $options['overview_meta'] : array();
+		$all_overview  = array();
+		foreach ( $overview_meta as $item ) {
+			$val = get_post_meta( $post_id, $item['meta_key'], true );
+			if ( '' !== $val && 'hidden' !== ( isset( $item['display'] ) ? $item['display'] : '' ) ) {
+				$all_overview[] = array(
+					'label' => $item['label'],
+					'value' => $val,
+					'icon'  => isset( $item['icon'] ) ? $item['icon'] : 'auto',
+				);
+			}
+		}
+
+		// Fallback: If overview_meta not yet saved in options, show all specs in the overview grid as well.
+		if ( empty( $all_overview ) && ! empty( $all_specs ) ) {
+			$all_overview = $all_specs;
 		}
 
 		// WhatsApp URL.
@@ -2263,7 +2658,7 @@ class Dynamic_Sheet_Post_Sync {
 						</div>
 					<?php endif; ?>
 
-					<!-- Specifications Grid -->
+					<!-- Specifications Grid (Main Details) -->
 					<h4 style="margin: 20px 0 10px 0; font-size: 15px; font-weight: 700; color: #1e293b;"><?php esc_html_e( 'Vehicle Specifications', 'dynamic-sheet-sync' ); ?></h4>
 					<div class="vehicle-single-specs-grid">
 						<?php if ( ! empty( $car_id ) ) : ?>
@@ -2295,11 +2690,56 @@ class Dynamic_Sheet_Post_Sync {
 				</div>
 			</div>
 
-			<!-- Full Overview -->
-			<?php if ( ! empty( $content ) ) : ?>
+			<!-- Full Vehicle Overview & Features (Creative 4-Column Grid) -->
+			<?php if ( ! empty( $all_overview ) || ! empty( $content ) ) : ?>
 				<div class="vehicle-single-desc-section">
-					<h3><?php esc_html_e( 'Vehicle Overview & Features', 'dynamic-sheet-sync' ); ?></h3>
-					<?php echo wp_kses_post( $content ); ?>
+					<div class="vehicle-overview-header-row">
+						<div class="vehicle-overview-badge-title">
+							<span class="vehicle-overview-badge"><?php esc_html_e( 'Full Specifications & Features', 'dynamic-sheet-sync' ); ?></span>
+							<h3 class="vehicle-overview-main-heading"><?php esc_html_e( 'Vehicle Overview & Features', 'dynamic-sheet-sync' ); ?></h3>
+						</div>
+						<?php if ( ! empty( $all_overview ) ) : ?>
+							<span class="vehicle-overview-count-pill"><?php echo sprintf( esc_html__( '%d Details & Features', 'dynamic-sheet-sync' ), count( $all_overview ) ); ?></span>
+						<?php endif; ?>
+					</div>
+
+					<?php if ( ! empty( $content ) ) : ?>
+						<div class="vehicle-overview-narrative">
+							<?php echo wp_kses_post( $content ); ?>
+						</div>
+					<?php endif; ?>
+
+					<?php if ( ! empty( $all_overview ) ) : ?>
+						<div class="vehicle-overview-grid">
+							<?php foreach ( $all_overview as $ov ) : 
+								$icon_svg = self::get_feature_icon_svg( $ov['label'], $ov['icon'] );
+								$is_multi = ( strpos( $ov['value'], ',' ) !== false || strpos( $ov['value'], ';' ) !== false || strpos( $ov['value'], "\n" ) !== false );
+							?>
+								<div class="vehicle-overview-card">
+									<div class="vehicle-overview-card-icon">
+										<?php echo $icon_svg; ?>
+									</div>
+									<div class="vehicle-overview-card-content">
+										<span class="vehicle-overview-card-label"><?php echo esc_html( $ov['label'] ); ?></span>
+										<?php if ( $is_multi ) : 
+											$features = preg_split( '/[,;\n]+/', $ov['value'] );
+										?>
+											<div class="vehicle-feature-chips">
+												<?php foreach ( $features as $feat ) : 
+													$clean_feat = trim( $feat );
+													if ( ! empty( $clean_feat ) ) :
+												?>
+													<span class="vehicle-feature-chip"><?php echo esc_html( $clean_feat ); ?></span>
+												<?php endif; endforeach; ?>
+											</div>
+										<?php else : ?>
+											<span class="vehicle-overview-card-val"><?php echo esc_html( $ov['value'] ); ?></span>
+										<?php endif; ?>
+									</div>
+								</div>
+							<?php endforeach; ?>
+						</div>
+					<?php endif; ?>
 				</div>
 			<?php endif; ?>
 		</div>
@@ -2696,12 +3136,26 @@ function dynamic_sheet_sync_activate() {
 			'whatsapp_number'    => '',
 			'frequency'          => 'hourly',
 			'custom_meta'        => array(
-				array( 'sheet_col' => 'Year', 'meta_key' => '_vehicle_year', 'label' => 'Year', 'icon' => '', 'display' => 'badge' ),
+				array( 'sheet_col' => 'Year', 'meta_key' => '_vehicle_year', 'label' => 'Year', 'icon' => '', 'display' => 'primary_spec' ),
 				array( 'sheet_col' => 'F', 'meta_key' => '_vehicle_mileage', 'label' => 'Mileage', 'icon' => '', 'display' => 'primary_spec' ),
 				array( 'sheet_col' => 'Fuel Type', 'meta_key' => '_vehicle_fuel', 'label' => 'Fuel', 'icon' => '', 'display' => 'primary_spec' ),
 				array( 'sheet_col' => 'Transmission', 'meta_key' => '_vehicle_transmission', 'label' => 'Gearbox', 'icon' => '', 'display' => 'primary_spec' ),
-				array( 'sheet_col' => 'Engine', 'meta_key' => '_vehicle_engine', 'label' => 'Engine', 'icon' => '', 'display' => 'detail' ),
-				array( 'sheet_col' => 'Color', 'meta_key' => '_vehicle_color', 'label' => 'Color', 'icon' => '', 'display' => 'detail' ),
+				array( 'sheet_col' => 'Engine', 'meta_key' => '_vehicle_engine', 'label' => 'Engine', 'icon' => '', 'display' => 'primary_spec' ),
+				array( 'sheet_col' => 'Color', 'meta_key' => '_vehicle_color', 'label' => 'Color', 'icon' => '', 'display' => 'primary_spec' ),
+			),
+			'overview_meta'      => array(
+				array( 'sheet_col' => 'Engine', 'meta_key' => '_vehicle_ov_engine', 'label' => 'Engine Capacity / Power', 'icon' => 'engine' ),
+				array( 'sheet_col' => 'Transmission', 'meta_key' => '_vehicle_ov_transmission', 'label' => 'Transmission', 'icon' => 'gearbox' ),
+				array( 'sheet_col' => 'Fuel Type', 'meta_key' => '_vehicle_ov_fuel', 'label' => 'Fuel Type', 'icon' => 'fuel' ),
+				array( 'sheet_col' => 'Drive Type', 'meta_key' => '_vehicle_ov_drive', 'label' => 'Drivetrain', 'icon' => 'drive' ),
+				array( 'sheet_col' => 'Body Style', 'meta_key' => '_vehicle_ov_body', 'label' => 'Body Style', 'icon' => 'body' ),
+				array( 'sheet_col' => 'Color', 'meta_key' => '_vehicle_ov_ext_color', 'label' => 'Exterior Color', 'icon' => 'color' ),
+				array( 'sheet_col' => 'Interior', 'meta_key' => '_vehicle_ov_int_color', 'label' => 'Interior & Seats', 'icon' => 'interior' ),
+				array( 'sheet_col' => 'Doors', 'meta_key' => '_vehicle_ov_doors', 'label' => 'Doors', 'icon' => 'door' ),
+				array( 'sheet_col' => 'Seats', 'meta_key' => '_vehicle_ov_seats', 'label' => 'Seating Capacity', 'icon' => 'seat' ),
+				array( 'sheet_col' => 'Condition', 'meta_key' => '_vehicle_ov_condition', 'label' => 'Condition', 'icon' => 'check' ),
+				array( 'sheet_col' => 'VIN', 'meta_key' => '_vehicle_ov_vin', 'label' => 'VIN / Chassis No', 'icon' => 'shield' ),
+				array( 'sheet_col' => 'Features', 'meta_key' => '_vehicle_ov_features', 'label' => 'Equipment & Options', 'icon' => 'star' ),
 			),
 			'last_sync_time'     => '',
 			'last_sync_status'   => '',
