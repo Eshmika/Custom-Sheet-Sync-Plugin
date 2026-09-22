@@ -588,7 +588,7 @@ class Dynamic_Sheet_Post_Sync {
 				letter-spacing: 0.1px;
 			}
 
-			/* Line 3: Price (Value only, unique prominent typography) */
+			/* Line 3: Price & Creative Discount Presentation */
 			.vehicle-card-price-unique {
 				font-size: 23px;
 				font-weight: 800;
@@ -598,6 +598,36 @@ class Dynamic_Sheet_Post_Sync {
 				margin-top: 4px;
 				font-feature-settings: "tnum";
 				font-variant-numeric: tabular-nums;
+				display: flex;
+				align-items: baseline;
+				flex-wrap: wrap;
+				gap: 8px 10px;
+			}
+			.vehicle-card-price-current {
+				font-size: 23px;
+				font-weight: 800;
+				color: #3a1f62;
+			}
+			.vehicle-card-price-original {
+				font-size: 15px;
+				font-weight: 600;
+				color: #94a3b8;
+				text-decoration: line-through;
+				text-decoration-color: #ef4444;
+				text-decoration-thickness: 1.5px;
+			}
+			.vehicle-card-discount-badge {
+				display: inline-flex;
+				align-items: center;
+				font-size: 11.5px;
+				font-weight: 700;
+				background: #ecfdf5;
+				color: #059669;
+				border: 1px solid #a7f3d0;
+				padding: 2px 8px;
+				border-radius: 6px;
+				letter-spacing: 0.2px;
+				vertical-align: middle;
 			}
 
 			/* Responsive styling for horizontal cards */
@@ -809,19 +839,60 @@ class Dynamic_Sheet_Post_Sync {
 				margin-bottom: 16px;
 			}
 			.vehicle-single-price-box {
-				background: linear-gradient(135deg, #eff6ff, #f8fafc);
-				border: 1px solid #bfdbfe;
+				background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+				border: 1px solid #e2e8f0;
 				border-radius: var(--vg-radius-md);
-				padding: 16px 20px;
+				padding: 18px 22px;
 				margin-bottom: 24px;
 				display: flex;
-				align-items: baseline;
+				flex-direction: column;
+				gap: 6px;
+			}
+			.vehicle-single-price-header {
+				display: flex;
+				align-items: center;
 				justify-content: space-between;
 			}
+			.vehicle-single-price-label {
+				font-size: 13px;
+				font-weight: 700;
+				color: #64748b;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+			}
+			.vehicle-single-price-values {
+				display: flex;
+				align-items: baseline;
+				flex-wrap: wrap;
+				gap: 12px;
+			}
 			.vehicle-single-price {
-				font-size: 30px;
+				font-size: 32px;
 				font-weight: 800;
-				color: var(--vg-primary);
+				color: #3a1f62;
+				letter-spacing: -0.5px;
+				line-height: 1.1;
+			}
+			.vehicle-single-price-original {
+				font-size: 18px;
+				font-weight: 600;
+				color: #94a3b8;
+				text-decoration: line-through;
+				text-decoration-color: #ef4444;
+				text-decoration-thickness: 2px;
+			}
+			.vehicle-single-discount-badge {
+				display: inline-flex;
+				align-items: center;
+				gap: 4px;
+				font-size: 13px;
+				font-weight: 700;
+				background: #ecfdf5;
+				color: #059669;
+				border: 1px solid #6ee7b7;
+				padding: 4px 10px;
+				border-radius: 20px;
+				letter-spacing: 0.2px;
 			}
 
 			/* Specs Table */
@@ -947,7 +1018,7 @@ class Dynamic_Sheet_Post_Sync {
 				padding: 16px 18px;
 				display: flex;
 				flex-direction: column;
-				justify-content: center;
+				justify-content: start;
 				gap: 4px;
 				transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 				position: relative;
@@ -1414,6 +1485,9 @@ class Dynamic_Sheet_Post_Sync {
 		if ( isset( $input['field_price'] ) ) {
 			$output['field_price'] = sanitize_text_field( trim( $input['field_price'] ) );
 		}
+		if ( isset( $input['field_discount'] ) ) {
+			$output['field_discount'] = sanitize_text_field( trim( $input['field_discount'] ) );
+		}
 		if ( isset( $input['field_mileage'] ) ) {
 			$output['field_mileage'] = sanitize_text_field( trim( $input['field_mileage'] ) );
 		}
@@ -1763,6 +1837,7 @@ class Dynamic_Sheet_Post_Sync {
 		$field_content    = isset( $options['field_content'] ) ? $options['field_content'] : 'Description';
 		$field_status     = isset( $options['field_status'] ) ? $options['field_status'] : 'Status';
 		$field_price      = isset( $options['field_price'] ) ? $options['field_price'] : 'Price';
+		$field_discount   = isset( $options['field_discount'] ) ? $options['field_discount'] : 'Discount';
 		$field_mileage    = isset( $options['field_mileage'] ) ? $options['field_mileage'] : 'F';
 		$currency_symbol  = isset( $options['currency_symbol'] ) ? $options['currency_symbol'] : '$';
 		$whatsapp_number  = isset( $options['whatsapp_number'] ) ? $options['whatsapp_number'] : '';
@@ -1944,8 +2019,12 @@ class Dynamic_Sheet_Post_Sync {
 								<td>
 									<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 520px;">
 										<div>
-											<label style="display:block; font-weight:600; font-size:12px; margin-bottom: 3px;" for="field_price"><?php esc_html_e( 'Price Column', 'dynamic-sheet-sync' ); ?></label>
+											<label style="display:block; font-weight:600; font-size:12px; margin-bottom: 3px;" for="field_price"><?php esc_html_e( 'Price Column (Selling Price)', 'dynamic-sheet-sync' ); ?></label>
 											<input type="text" id="field_price" name="dynamic_sheet_sync_options[field_price]" value="<?php echo esc_attr( $field_price ); ?>" placeholder="e.g. Price" />
+										</div>
+										<div>
+											<label style="display:block; font-weight:600; font-size:12px; margin-bottom: 3px;" for="field_discount"><?php esc_html_e( 'Discount Column', 'dynamic-sheet-sync' ); ?></label>
+											<input type="text" id="field_discount" name="dynamic_sheet_sync_options[field_discount]" value="<?php echo esc_attr( $field_discount ); ?>" placeholder="e.g. Discount" />
 										</div>
 										<div>
 											<label style="display:block; font-weight:600; font-size:12px; margin-bottom: 3px;" for="field_mileage"><?php esc_html_e( 'Mileage Column (Default: F)', 'dynamic-sheet-sync' ); ?></label>
@@ -2272,11 +2351,13 @@ class Dynamic_Sheet_Post_Sync {
 		// Resolve Column Indexes.
 		$content_col_header = isset( $options['field_content'] ) ? $options['field_content'] : '';
 		$status_col_header  = isset( $options['field_status'] ) ? $options['field_status'] : '';
-		$price_col_header   = isset( $options['field_price'] ) ? $options['field_price'] : '';
+		$price_col_header   = isset( $options['field_price'] ) ? $options['field_price'] : 'Price';
+		$discount_col_header= isset( $options['field_discount'] ) ? $options['field_discount'] : 'Discount';
 
 		$content_index   = ! empty( $content_col_header ) ? self::resolve_col_index( $content_col_header, $headers ) : false;
 		$status_index    = ! empty( $status_col_header ) ? self::resolve_col_index( $status_col_header, $headers ) : false;
 		$price_index     = ! empty( $price_col_header ) ? self::resolve_col_index( $price_col_header, $headers ) : false;
+		$discount_index  = ! empty( $discount_col_header ) ? self::resolve_col_index( $discount_col_header, $headers ) : false;
 		$mileage_col     = isset( $options['field_mileage'] ) && '' !== trim( $options['field_mileage'] ) ? $options['field_mileage'] : 'F';
 		$mileage_index   = self::resolve_col_index( $mileage_col, $headers );
 		$body_style_index = self::resolve_col_index( 'M', $headers );
@@ -2353,8 +2434,9 @@ class Dynamic_Sheet_Post_Sync {
 			// However, if the user wants all sheet rows in the inventory, ensure publish status.
 			// Synced items from active sheet rows are published so they appear on the frontend.
 			$post_status = 'publish';
-			$price_value   = ( false !== $price_index && isset( $row_data[$price_index] ) ) ? sanitize_text_field( trim( $row_data[$price_index] ) ) : '';
-			$mileage_value = ( false !== $mileage_index && isset( $row_data[$mileage_index] ) ) ? sanitize_text_field( trim( $row_data[$mileage_index] ) ) : '';
+			$price_value    = ( false !== $price_index && isset( $row_data[$price_index] ) ) ? sanitize_text_field( trim( $row_data[$price_index] ) ) : '';
+			$discount_value = ( false !== $discount_index && isset( $row_data[$discount_index] ) ) ? sanitize_text_field( trim( $row_data[$discount_index] ) ) : '';
+			$mileage_value  = ( false !== $mileage_index && isset( $row_data[$mileage_index] ) ) ? sanitize_text_field( trim( $row_data[$mileage_index] ) ) : '';
 
 			// Images from Column AA and AB.
 			$main_img_raw = ( false !== $image_index && isset( $row_data[$image_index] ) ) ? trim( $row_data[$image_index] ) : '';
@@ -2417,10 +2499,33 @@ class Dynamic_Sheet_Post_Sync {
 				// Save Car ID explicitly for product card rendering.
 				update_post_meta( $post_id, '_vehicle_car_id', $unique_id_value );
 
-				// Save Price.
-				if ( ! empty( $price_value ) ) {
+				// Save Price & Discount.
+				if ( '' !== $price_value ) {
 					update_post_meta( $post_id, '_vehicle_price', $price_value );
-					update_post_meta( $post_id, '_price', preg_replace( '/[^0-9.]/', '', $price_value ) ); // For WooCommerce compatibility
+
+					$clean_p = floatval( preg_replace( '/[^0-9.]/', '', $price_value ) );
+					$clean_d = floatval( preg_replace( '/[^0-9.]/', '', $discount_value ) );
+					$final_p = $clean_p;
+
+					if ( '' !== $discount_value && $clean_d > 0 ) {
+						update_post_meta( $post_id, '_vehicle_discount', $discount_value );
+						if ( false !== strpos( $discount_value, '%' ) ) {
+							// Percentage discount
+							$final_p = max( 0, $clean_p - ( $clean_p * ( $clean_d / 100 ) ) );
+						} elseif ( $clean_d < $clean_p ) {
+							// Flat discount amount subtracted from selling price
+							$final_p = max( 0, $clean_p - $clean_d );
+						} else {
+							// Discounted final price given directly
+							$final_p = $clean_d;
+						}
+						update_post_meta( $post_id, '_vehicle_final_price', strval( $final_p ) );
+					} else {
+						delete_post_meta( $post_id, '_vehicle_discount' );
+						update_post_meta( $post_id, '_vehicle_final_price', strval( $clean_p ) );
+					}
+
+					update_post_meta( $post_id, '_price', $final_p ); // For WooCommerce compatibility
 				}
 
 				// Save Mileage (Default Column F).
@@ -2502,6 +2607,8 @@ class Dynamic_Sheet_Post_Sync {
 
 		$car_title        = get_the_title( $post_id );
 		$price            = get_post_meta( $post_id, '_vehicle_price', true );
+		$discount         = get_post_meta( $post_id, '_vehicle_discount', true );
+		$final_price_meta = get_post_meta( $post_id, '_vehicle_final_price', true );
 		$currency         = ! empty( $options['currency_symbol'] ) ? $options['currency_symbol'] : '$';
 		$whatsapp         = ! empty( $options['whatsapp_number'] ) ? $options['whatsapp_number'] : '';
 		$custom_meta      = isset( $options['custom_meta'] ) && is_array( $options['custom_meta'] ) ? $options['custom_meta'] : array();
@@ -2591,11 +2698,52 @@ class Dynamic_Sheet_Post_Sync {
 						<span class="vehicle-single-id-tag"><?php esc_html_e( 'Car ID / VIN:', 'dynamic-sheet-sync' ); ?> #<?php echo esc_html( $car_id ); ?></span>
 					<?php endif; ?>
 
-					<?php if ( ! empty( $price ) ) : ?>
+					<?php if ( ! empty( $price ) ) : 
+						$clean_orig_p   = floatval( preg_replace( '/[^0-9.]/', '', strval( $price ) ) );
+						$has_discount   = false;
+						$discount_clean = floatval( preg_replace( '/[^0-9.]/', '', strval( $discount ) ) );
+						$final_p_num    = $clean_orig_p;
+						$discount_badge = '';
+
+						if ( ! empty( $discount ) && $discount_clean > 0 ) {
+							$has_discount = true;
+							if ( false !== strpos( strval( $discount ), '%' ) ) {
+								$final_p_num = max( 0, $clean_orig_p - ( $clean_orig_p * ( $discount_clean / 100 ) ) );
+								$discount_badge = '-' . round( $discount_clean ) . '% OFF';
+							} elseif ( $discount_clean < $clean_orig_p ) {
+								$final_p_num = max( 0, $clean_orig_p - $discount_clean );
+								$discount_badge = 'SAVE ' . $currency . number_format_i18n( $discount_clean );
+							} else {
+								$final_p_num = $discount_clean;
+								$saved = max( 0, $clean_orig_p - $discount_clean );
+								$discount_badge = $saved > 0 ? 'SAVE ' . $currency . number_format_i18n( $saved ) : 'SALE';
+							}
+						} elseif ( '' !== $final_price_meta && floatval( $final_price_meta ) > 0 && floatval( $final_price_meta ) < $clean_orig_p ) {
+							$has_discount = true;
+							$final_p_num = floatval( $final_price_meta );
+							$saved = $clean_orig_p - $final_p_num;
+							$discount_badge = 'SAVE ' . $currency . number_format_i18n( $saved );
+						}
+					?>
 						<div class="vehicle-single-price-box">
-							<span style="font-size: 13px; font-weight: 700; color: #475569; text-transform: uppercase;"><?php esc_html_e( 'Vehicle Price', 'dynamic-sheet-sync' ); ?></span>
-							<div class="vehicle-single-price">
-								<span><?php echo esc_html( $currency ); ?></span><?php echo esc_html( number_format_i18n( floatval( preg_replace( '/[^0-9.]/', '', $price ) ) ) ); ?>
+							<div class="vehicle-single-price-header">
+								<span class="vehicle-single-price-label"><?php esc_html_e( 'Vehicle Price', 'dynamic-sheet-sync' ); ?></span>
+								<?php if ( $has_discount && ! empty( $discount_badge ) ) : ?>
+									<span class="vehicle-single-discount-badge">
+										<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+										<?php echo esc_html( $discount_badge ); ?>
+									</span>
+								<?php endif; ?>
+							</div>
+							<div class="vehicle-single-price-values">
+								<div class="vehicle-single-price">
+									<span><?php echo esc_html( $currency ); ?></span><?php echo esc_html( number_format_i18n( $final_p_num ) ); ?>
+								</div>
+								<?php if ( $has_discount ) : ?>
+									<div class="vehicle-single-price-original" title="<?php esc_attr_e( 'Original Selling Price', 'dynamic-sheet-sync' ); ?>">
+										<span><?php echo esc_html( $currency ); ?></span><?php echo esc_html( number_format_i18n( $clean_orig_p ) ); ?>
+									</div>
+								<?php endif; ?>
 							</div>
 						</div>
 					<?php endif; ?>
@@ -2739,11 +2887,13 @@ class Dynamic_Sheet_Post_Sync {
 				$car_id = get_post_meta( $post_id, ( ! empty( $options['uid_meta_key'] ) ? $options['uid_meta_key'] : '_sku' ), true );
 			}
 
-			// Price.
-			$price = get_post_meta( $post_id, '_vehicle_price', true );
+			// Price & Discount.
+			$price            = get_post_meta( $post_id, '_vehicle_price', true );
 			if ( empty( $price ) ) {
 				$price = get_post_meta( $post_id, '_price', true );
 			}
+			$discount         = get_post_meta( $post_id, '_vehicle_discount', true );
+			$final_price_meta = get_post_meta( $post_id, '_vehicle_final_price', true );
 
 			// Parse custom specs for filter attributes.
 			$fuel_val  = '';
@@ -2832,9 +2982,32 @@ class Dynamic_Sheet_Post_Sync {
 			} );
 			$specs_line_text = implode( ' | ', $specs_line_items );
 
-			// Format Price line 3 (plain value only, unique display).
-			$clean_price = preg_replace( '/[^0-9.]/', '', strval( $price ) );
-			$formatted_price = ! empty( $clean_price ) ? $atts['currency'] . number_format_i18n( floatval( $clean_price ) ) : ( ! empty( $price ) ? esc_html( $price ) : '' );
+			// Format Price line 3 (Creative Selling Price - Discount presentation).
+			$clean_price    = floatval( preg_replace( '/[^0-9.]/', '', strval( $price ) ) );
+			$has_discount   = false;
+			$discount_clean = floatval( preg_replace( '/[^0-9.]/', '', strval( $discount ) ) );
+			$final_price    = $clean_price;
+			$card_badge     = '';
+
+			if ( ! empty( $discount ) && $discount_clean > 0 ) {
+				$has_discount = true;
+				if ( false !== strpos( strval( $discount ), '%' ) ) {
+					$final_price = max( 0, $clean_price - ( $clean_price * ( $discount_clean / 100 ) ) );
+					$card_badge  = '-' . round( $discount_clean ) . '%';
+				} elseif ( $discount_clean < $clean_price ) {
+					$final_price = max( 0, $clean_price - $discount_clean );
+					$card_badge  = 'Save ' . $atts['currency'] . number_format_i18n( $discount_clean );
+				} else {
+					$final_price = $discount_clean;
+					$saved = max( 0, $clean_price - $discount_clean );
+					$card_badge  = $saved > 0 ? 'Save ' . $atts['currency'] . number_format_i18n( $saved ) : 'Sale';
+				}
+			} elseif ( '' !== $final_price_meta && floatval( $final_price_meta ) > 0 && floatval( $final_price_meta ) < $clean_price ) {
+				$has_discount = true;
+				$final_price  = floatval( $final_price_meta );
+				$saved = $clean_price - $final_price;
+				$card_badge   = 'Save ' . $atts['currency'] . number_format_i18n( $saved );
+			}
 
 			// Get Gallery Images (Column AA + AB).
 			$gallery = get_post_meta( $post_id, '_vehicle_gallery', true );
@@ -2918,10 +3091,22 @@ class Dynamic_Sheet_Post_Sync {
 							</div>
 						<?php endif; ?>
 
-						<!-- Line 3: Price (Value only, unique prominent text) -->
-						<?php if ( ! empty( $formatted_price ) ) : ?>
+						<!-- Line 3: Price & Discount (Creative Presentation) -->
+						<?php if ( $clean_price > 0 || ! empty( $price ) ) : ?>
 							<div class="vehicle-card-price-unique">
-								<?php echo esc_html( $formatted_price ); ?>
+								<span class="vehicle-card-price-current">
+									<?php echo esc_html( $atts['currency'] . number_format_i18n( $final_price ) ); ?>
+								</span>
+								<?php if ( $has_discount ) : ?>
+									<span class="vehicle-card-price-original" title="<?php esc_attr_e( 'Original Selling Price', 'dynamic-sheet-sync' ); ?>">
+										<?php echo esc_html( $atts['currency'] . number_format_i18n( $clean_price ) ); ?>
+									</span>
+									<?php if ( ! empty( $card_badge ) ) : ?>
+										<span class="vehicle-card-discount-badge">
+											<?php echo esc_html( $card_badge ); ?>
+										</span>
+									<?php endif; ?>
+								<?php endif; ?>
 							</div>
 						<?php endif; ?>
 					</div>
@@ -3057,6 +3242,7 @@ function dynamic_sheet_sync_activate() {
 			'field_content'      => 'Description',
 			'field_status'       => 'Status',
 			'field_price'        => 'Price',
+			'field_discount'     => 'Discount',
 			'field_mileage'      => 'F',
 			'currency_symbol'    => '$',
 			'whatsapp_number'    => '',
