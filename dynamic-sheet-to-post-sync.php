@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamic Sheet to Post Type Sync & Vehicle Product Grid
  * Description: Automatically imports and syncs Google Sheet vehicle inventory into WordPress posts/products with multi-column titles, Google Drive image gallery slider (AA & AB columns), responsive creative filters, 9-card pagination, and dedicated full vehicle information pages.
- * Version: 2.2.7
+ * Version: 2.2.9
  * Author: Eshmika Hettiarachchi
  * Text Domain: dynamic-sheet-sync
  * License: GPL2
@@ -140,6 +140,7 @@ class Dynamic_Sheet_Post_Sync {
 			.vehicle-catalog-content {
 				flex: 1 1 0%;
 				min-width: 0;
+				width: 100%;
 			}
 
 			/* ==========================================================================
@@ -386,22 +387,27 @@ class Dynamic_Sheet_Post_Sync {
 				.vehicle-filter-wrapper {
 					flex: 1 1 100%;
 					width: 100%;
+					max-width: 100%;
+					box-sizing: border-box;
+				}
+				.vehicle-catalog-content {
+					width: 100%;
 				}
 				.vehicle-grid {
+					width: 100%;
 					grid-template-columns: repeat(3, minmax(0, 1fr));
 					gap: 18px;
 				}
 			}
 			@media (max-width: 768px) {
 				.vehicle-grid {
-					grid-template-columns: repeat(2, minmax(0, 1fr));
-					gap: 16px;
+					grid-template-columns: 1fr; /* Full width cards on mobile view matching filter design width */
+					gap: 20px;
+					width: 100%;
 				}
-			}
-			@media (max-width: 520px) {
-				.vehicle-grid {
-					grid-template-columns: 1fr;
-					gap: 16px;
+				.vehicle-card {
+					width: 100%;
+					box-sizing: border-box;
 				}
 			}
 
