@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamic Sheet to Post Type Sync & Vehicle Product Grid
  * Description: Automatically imports and syncs Google Sheet vehicle inventory into WordPress posts/products with multi-column titles, Google Drive image gallery slider (AA & AB columns), responsive creative filters, 9-card pagination, and dedicated full vehicle information pages.
- * Version: 2.2.5
+ * Version: 2.2.7
  * Author: Eshmika Hettiarachchi
  * Text Domain: dynamic-sheet-sync
  * License: GPL2
@@ -129,238 +129,237 @@ class Dynamic_Sheet_Post_Sync {
 			.vehicle-grid-container * { box-sizing: border-box; }
 
 			/* ==========================================================================
-			   MODERN CREATIVE FILTER BAR (Clean White, Deep Purple Accent)
+			   CATALOG LAYOUT (Sidebar on Desktop, Top on Mobile)
 			   ========================================================================== */
-			.vehicle-filter-wrapper {
-				background: #ffffff;
-				border: 1px solid var(--vg-border);
-				border-radius: var(--vg-radius-lg);
-				padding: 22px 26px;
-				margin-bottom: 32px;
-				box-shadow: var(--vg-shadow-md);
-				position: relative;
-				transition: border-color 0.25s ease, box-shadow 0.25s ease;
-			}
-			.vehicle-filter-wrapper::before {
-				content: "";
-				position: absolute;
-				top: 0;
-				left: 24px;
-				right: 24px;
-				height: 3px;
-				background: linear-gradient(90deg, #170a3d 0%, #3a1f62 60%, rgba(58, 31, 98, 0.1) 100%);
-				border-radius: 3px 3px 0 0;
-			}
-			.vehicle-filter-main-row {
+			.vehicle-catalog-layout {
 				display: flex;
-				flex-wrap: wrap;
-				gap: 12px;
-				align-items: center;
-				justify-content: space-between;
-			}
-			.vehicle-search-box {
-				position: relative;
-				flex: 1 1 290px;
-				min-width: 240px;
-			}
-			.vehicle-search-svg {
-				position: absolute;
-				left: 15px;
-				top: 50%;
-				transform: translateY(-50%);
-				pointer-events: none;
-				transition: color 0.2s ease;
-			}
-			.vehicle-search-input {
+				gap: 30px;
+				align-items: flex-start;
 				width: 100%;
-				height: 48px;
-				padding: 10px 42px 10px 44px;
-				border: 1.5px solid var(--vg-border);
-				border-radius: var(--vg-radius-md);
-				font-size: 14px;
-				font-weight: 500;
-				color: var(--vg-text-main);
-				background: #ffffff;
-				outline: none;
-				transition: all 0.25s ease;
 			}
-			.vehicle-search-input::placeholder {
-				color: #9b94a8;
-				font-weight: 400;
-			}
-			.vehicle-search-input:focus {
-				border-color: #3a1f62;
-				background: #ffffff;
-				box-shadow: 0 0 0 3px rgba(58, 31, 98, 0.12);
-			}
-			.vehicle-search-clear {
-				position: absolute;
-				right: 12px;
-				top: 50%;
-				transform: translateY(-50%);
-				background: #f1eef8;
-				color: #5c5470;
-				border: none;
-				width: 22px;
-				height: 22px;
-				border-radius: 50%;
-				cursor: pointer;
-				display: none;
-				align-items: center;
-				justify-content: center;
-				transition: all 0.2s ease;
-				padding: 0;
-			}
-			.vehicle-search-clear:hover {
-				background: #3a1f62;
-				color: #ffffff;
-			}
-			.vehicle-search-clear svg {
-				width: 11px;
-				height: 11px;
+			.vehicle-catalog-content {
+				flex: 1 1 0%;
+				min-width: 0;
 			}
 
-			.vehicle-filter-controls {
+			/* ==========================================================================
+			   DARK GRAY VEHICLE FILTER SIDEBAR
+			   ========================================================================== */
+			.vehicle-filter-wrapper {
+				flex: 0 0 290px;
+				width: 290px;
+				background: #1e2430; /* Dark Gray */
+				border: 1px solid #2d3748;
+				border-radius: var(--vg-radius-lg);
+				padding: 24px 20px;
+				box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+				position: relative;
+				color: #f1f5f9;
+				box-sizing: border-box;
+			}
+			.vehicle-filter-header {
+				margin-bottom: 20px;
+				padding-bottom: 12px;
+				border-bottom: 1px solid #334155;
+			}
+			.vehicle-filter-title {
+				margin: 0;
+				font-size: 17px;
+				font-weight: 700;
+				color: #ffffff;
+				letter-spacing: -0.2px;
+				text-transform: uppercase;
+				font-size: 14px;
+				letter-spacing: 0.5px;
+			}
+			.vehicle-filter-rows {
 				display: flex;
-				flex-wrap: wrap;
-				gap: 10px;
-				align-items: center;
+				flex-direction: column;
+				gap: 16px;
+			}
+			.vehicle-filter-row {
+				display: flex;
+				flex-direction: column;
+				gap: 6px;
+			}
+			.vehicle-filter-label {
+				font-size: 12px;
+				font-weight: 600;
+				color: #94a3b8;
+				text-transform: uppercase;
+				letter-spacing: 0.5px;
+			}
+			.vehicle-filter-two-cols {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 8px;
 			}
 			.vehicle-select-wrap {
 				position: relative;
-				min-width: 145px;
+				width: 100%;
 			}
+			/* Little Dark Gray filter dropdown options */
 			.vehicle-filter-select {
 				width: 100%;
-				height: 48px;
-				padding: 8px 34px 8px 14px;
-				border: 1.5px solid var(--vg-border);
-				border-radius: var(--vg-radius-md);
+				height: 44px;
+				padding: 8px 30px 8px 12px;
+				border: 1px solid #3d4a60;
+				border-radius: 8px;
 				font-size: 13.5px;
-				font-weight: 600;
-				color: #170a3d;
-				background-color: #ffffff;
+				font-weight: 500;
+				color: #f8fafc;
+				background-color: #2a3446; /* Little Dark Gray */
 				cursor: pointer;
 				outline: none;
 				appearance: none;
 				-webkit-appearance: none;
-				transition: all 0.2s ease;
+				transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+				box-sizing: border-box;
 			}
-			.vehicle-filter-select:hover {
-				border-color: #d2cbe0;
+			.vehicle-filter-select:hover:not(:disabled) {
+				border-color: #4f5f7a;
+				background-color: #323e53;
 			}
 			.vehicle-filter-select:focus {
-				border-color: #3a1f62;
-				box-shadow: 0 0 0 3px rgba(58, 31, 98, 0.12);
+				border-color: #dc2626;
+				box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.25);
+			}
+			.vehicle-filter-select:disabled {
+				opacity: 0.45;
+				cursor: not-allowed;
+				background-color: #232c3b;
+				border-color: #2b3547;
+				color: #64748b;
+			}
+			.vehicle-filter-select option {
+				background-color: #1e2430;
+				color: #f8fafc;
 			}
 			.vehicle-select-arrow {
 				position: absolute;
-				right: 13px;
+				right: 11px;
 				top: 50%;
 				transform: translateY(-50%);
 				pointer-events: none;
-				color: #6b637d;
+				color: #94a3b8;
 				display: inline-flex;
 				align-items: center;
 				justify-content: center;
-				transition: transform 0.2s ease, color 0.2s ease;
 			}
-			.vehicle-select-wrap:hover .vehicle-select-arrow {
-				color: #3a1f62;
+			.vehicle-filter-actions {
+				margin-top: 6px;
+				gap: 10px;
 			}
-			.vehicle-reset-btn {
-				height: 48px;
-				padding: 0 18px;
-				background: #ffffff;
-				color: #3a1f62;
-				border: 1.5px solid #dfd8ec;
-				border-radius: var(--vg-radius-md);
-				font-size: 13px;
+			/* Red color search button */
+			.vehicle-filter-search-btn {
+				width: 100%;
+				height: 44px;
+				padding: 0 16px;
+				background: #dc2626; /* Red color background */
+				color: #ffffff; /* White color text */
+				border: none;
+				border-radius: 8px;
+				font-size: 14px;
 				font-weight: 700;
 				cursor: pointer;
 				display: inline-flex;
 				align-items: center;
-				gap: 7px;
-				letter-spacing: 0.2px;
-				transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+				justify-content: center;
+				gap: 8px;
+				transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+				box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
 			}
-			.vehicle-reset-btn svg {
-				width: 14px;
-				height: 14px;
-				transition: transform 0.3s ease;
+			.vehicle-filter-search-btn:hover {
+				background: #b91c1c;
+				box-shadow: 0 6px 16px rgba(220, 38, 38, 0.45);
 			}
-			.vehicle-reset-btn:hover {
-				background: #170a3d;
-				color: #ffffff;
-				border-color: #170a3d;
-				box-shadow: 0 4px 12px rgba(23, 10, 61, 0.18);
+			.vehicle-filter-search-btn:active {
+				transform: scale(0.98);
 			}
-			.vehicle-reset-btn:hover svg {
-				transform: rotate(-90deg);
-			}
-
-			.vehicle-filter-meta-bar {
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-				margin-top: 16px;
-				padding-top: 15px;
-				border-top: 1px solid #f1eef6;
+			.vehicle-reset-btn {
+				width: 100%;
+				height: 40px;
+				padding: 0 14px;
+				background: transparent;
+				color: #94a3b8;
+				border: 1px solid #374151;
+				border-radius: 8px;
 				font-size: 13px;
-				color: var(--vg-text-muted);
-			}
-			.vehicle-count-badge {
-				font-weight: 700;
-				color: #170a3d;
+				font-weight: 600;
+				cursor: pointer;
 				display: inline-flex;
 				align-items: center;
+				justify-content: center;
 				gap: 7px;
+				transition: all 0.2s ease;
+			}
+			.vehicle-reset-btn svg {
+				width: 13px;
+				height: 13px;
+			}
+			.vehicle-reset-btn:hover {
+				background: #2a3446;
+				color: #ffffff;
+				border-color: #4b5563;
+			}
+			.vehicle-filter-meta-bar {
+				margin-top: 18px;
+				padding-top: 14px;
+				border-top: 1px solid #2d3748;
+				font-size: 12.5px;
+				color: #94a3b8;
+			}
+			.vehicle-count-badge {
+				font-weight: 600;
+				color: #e2e8f0;
+				display: flex;
+				align-items: center;
+				gap: 6px;
 			}
 			.vehicle-count-badge::before {
 				content: "";
 				display: inline-block;
-				width: 8px;
-				height: 8px;
+				width: 7px;
+				height: 7px;
 				border-radius: 50%;
-				background: #3a1f62;
+				background: #dc2626;
 			}
 			.vehicle-active-chips {
 				display: flex;
 				flex-wrap: wrap;
-				gap: 7px;
-				align-items: center;
+				gap: 6px;
+				margin-top: 10px;
 			}
 			.vehicle-chip {
-				background: #f8f6fc;
-				color: #170a3d;
-				border: 1px solid #dfd8ec;
-				padding: 4px 11px;
-				border-radius: 20px;
-				font-size: 12px;
-				font-weight: 600;
+				background: #2a3446;
+				color: #f1f5f9;
+				border: 1px solid #3d4a60;
+				padding: 3px 9px;
+				border-radius: 14px;
+				font-size: 11.5px;
+				font-weight: 500;
 				display: inline-flex;
 				align-items: center;
-				gap: 6px;
-				transition: all 0.2s ease;
+				gap: 5px;
 			}
 			.vehicle-chip-remove {
 				cursor: pointer;
 				display: inline-flex;
 				align-items: center;
 				justify-content: center;
-				width: 15px;
-				height: 15px;
+				width: 14px;
+				height: 14px;
 				border-radius: 50%;
-				color: #6b637d;
+				color: #94a3b8;
 				transition: all 0.2s ease;
 			}
 			.vehicle-chip-remove:hover {
-				background: #3a1f62;
+				background: #dc2626;
 				color: #ffffff;
 			}
 			.vehicle-chip-remove svg {
-				width: 9px;
-				height: 9px;
+				width: 8px;
+				height: 8px;
 				stroke-width: 2.5;
 			}
 
@@ -369,23 +368,41 @@ class Dynamic_Sheet_Post_Sync {
 			   ========================================================================== */
 			.vehicle-grid {
 				display: grid;
-				grid-template-columns: repeat(var(--vg-cols, 3), minmax(0, 1fr));
+				grid-template-columns: repeat(3, minmax(0, 1fr));
 				gap: 24px;
+				width: 100%;
 			}
-			@media (max-width: 1024px) {
+			@media (max-width: 1200px) {
 				.vehicle-grid {
-					grid-template-columns: repeat(2, minmax(0, 1fr));
-					gap: 20px;
-				}
-			}
-			@media (max-width: 640px) {
-				.vehicle-grid {
-					grid-template-columns: 1fr;
+					grid-template-columns: repeat(3, minmax(0, 1fr));
 					gap: 18px;
 				}
-				.vehicle-filter-wrapper { padding: 16px; }
-				.vehicle-select-wrap { width: 100%; min-width: 100%; }
-				.vehicle-reset-btn { width: 100%; justify-content: center; }
+			}
+			@media (max-width: 960px) {
+				.vehicle-catalog-layout {
+					flex-direction: column;
+					gap: 24px;
+				}
+				.vehicle-filter-wrapper {
+					flex: 1 1 100%;
+					width: 100%;
+				}
+				.vehicle-grid {
+					grid-template-columns: repeat(3, minmax(0, 1fr));
+					gap: 18px;
+				}
+			}
+			@media (max-width: 768px) {
+				.vehicle-grid {
+					grid-template-columns: repeat(2, minmax(0, 1fr));
+					gap: 16px;
+				}
+			}
+			@media (max-width: 520px) {
+				.vehicle-grid {
+					grid-template-columns: 1fr;
+					gap: 16px;
+				}
 			}
 
 			/* ==========================================================================
@@ -1218,29 +1235,76 @@ class Dynamic_Sheet_Post_Sync {
 
 				var currentPage = 1;
 
+				// Dependent Model Dropdown Handler
+				$(document).on("change", ".vehicle-filter-car-name", function() {
+					var selectedCar = $(this).val();
+					var $modelSelect = $(".vehicle-filter-model");
+					$modelSelect.empty();
+
+					if (!selectedCar) {
+						$modelSelect.append("<option value=\"\">Select Car Name first</option>");
+						$modelSelect.prop("disabled", true);
+					} else {
+						var $wrapper = $(".vehicle-filter-wrapper");
+						var modelsMap = {};
+						try {
+							var rawMap = $wrapper.attr("data-models-map");
+							if (rawMap) {
+								modelsMap = JSON.parse(rawMap);
+							}
+						} catch (e) {
+							modelsMap = {};
+						}
+
+						var models = modelsMap[selectedCar] || [];
+						$modelSelect.append("<option value=\"\">All Models</option>");
+						if (models.length > 0) {
+							for (var m = 0; m < models.length; m++) {
+								$modelSelect.append("<option value=\"" + models[m] + "\">" + models[m] + "</option>");
+							}
+						}
+						$modelSelect.prop("disabled", false);
+					}
+				});
+
 				function getFilteredCards() {
-					var searchTerm = ($(".vehicle-search-input").val() || "").trim().toLowerCase();
-					var fuelFilter = $(".vehicle-filter-fuel").val() || "";
-					var yearFilter = $(".vehicle-filter-year").val() || "";
-					var transFilter = $(".vehicle-filter-transmission").val() || "";
+					var carNameFilter = ($(".vehicle-filter-car-name").val() || "").trim().toLowerCase();
+					var modelFilter = ($(".vehicle-filter-model").val() || "").trim().toLowerCase();
+					var minPriceVal = parseFloat($(".vehicle-filter-min-price").val());
+					var maxPriceVal = parseFloat($(".vehicle-filter-max-price").val());
+					var fromYearVal = parseInt($(".vehicle-filter-from-year").val(), 10);
+					var toYearVal = parseInt($(".vehicle-filter-to-year").val(), 10);
+					var bodyFilter = ($(".vehicle-filter-body-style").val() || "").trim().toLowerCase();
+
+					var hasMinPrice = !isNaN(minPriceVal) && minPriceVal > 0;
+					var hasMaxPrice = !isNaN(maxPriceVal) && maxPriceVal > 0;
+					var hasFromYear = !isNaN(fromYearVal) && fromYearVal > 0;
+					var hasToYear = !isNaN(toYearVal) && toYearVal > 0;
 
 					var $allCards = $(".vehicle-card");
 					var matching = [];
 
 					$allCards.each(function() {
 						var $card = $(this);
-						var title = ($card.data("title") || "").toString().toLowerCase();
-						var carId = ($card.data("id") || "").toString().toLowerCase();
-						var fuel = ($card.data("fuel") || "").toString();
-						var year = ($card.data("year") || "").toString();
-						var trans = ($card.data("transmission") || "").toString();
+						var carName = ($card.data("car-name") || "").toString().toLowerCase();
+						var model = ($card.data("model") || "").toString().toLowerCase();
+						var cardPrice = parseFloat($card.data("price")) || 0;
+						var cardYear = parseInt($card.data("year"), 10) || 0;
+						var cardBody = ($card.data("body-style") || "").toString().toLowerCase();
 
-						var matchesSearch = !searchTerm || title.indexOf(searchTerm) > -1 || carId.indexOf(searchTerm) > -1;
-						var matchesFuel = !fuelFilter || fuel === fuelFilter;
-						var matchesYear = !yearFilter || year === yearFilter;
-						var matchesTrans = !transFilter || trans === transFilter;
+						var matchesCarName = !carNameFilter || carName === carNameFilter;
+						var matchesModel = !modelFilter || model === modelFilter;
+						var matchesPrice = true;
+						if (hasMinPrice && cardPrice < minPriceVal) matchesPrice = false;
+						if (hasMaxPrice && cardPrice > maxPriceVal) matchesPrice = false;
 
-						if (matchesSearch && matchesFuel && matchesYear && matchesTrans) {
+						var matchesYear = true;
+						if (hasFromYear && cardYear < fromYearVal) matchesYear = false;
+						if (hasToYear && cardYear > toYearVal) matchesYear = false;
+
+						var matchesBody = !bodyFilter || cardBody === bodyFilter;
+
+						if (matchesCarName && matchesModel && matchesPrice && matchesYear && matchesBody) {
 							matching.push($card);
 						}
 					});
@@ -1304,24 +1368,32 @@ class Dynamic_Sheet_Post_Sync {
 					var $chipsContainer = $(".vehicle-active-chips");
 					$chipsContainer.empty();
 
-					var fuel = $(".vehicle-filter-fuel").val();
-					var year = $(".vehicle-filter-year").val();
-					var trans = $(".vehicle-filter-transmission").val();
-					var search = $(".vehicle-search-input").val();
+					var carName = $(".vehicle-filter-car-name").val();
+					var model = $(".vehicle-filter-model").val();
+					var minPrice = $(".vehicle-filter-min-price").val();
+					var maxPrice = $(".vehicle-filter-max-price").val();
+					var fromYear = $(".vehicle-filter-from-year").val();
+					var toYear = $(".vehicle-filter-to-year").val();
+					var bodyStyle = $(".vehicle-filter-body-style").val();
 
-					var closeSvg = "<svg viewBox=\"0 0 24 24\" width=\"9\" height=\"9\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"></line><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"></line></svg>";
+					var closeSvg = "<svg viewBox=\"0 0 24 24\" width=\"8\" height=\"8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"></line><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"></line></svg>";
 
-					if (search) {
-						$chipsContainer.append("<span class=\"vehicle-chip\">Search: " + search + " <span class=\"vehicle-chip-remove\" data-target=\"search\" title=\"Remove search filter\">" + closeSvg + "</span></span>");
+					if (carName) {
+						$chipsContainer.append("<span class=\"vehicle-chip\">" + carName + " <span class=\"vehicle-chip-remove\" data-target=\"car-name\" title=\"Remove\">" + closeSvg + "</span></span>");
 					}
-					if (fuel) {
-						$chipsContainer.append("<span class=\"vehicle-chip\">Fuel: " + fuel + " <span class=\"vehicle-chip-remove\" data-target=\"fuel\" title=\"Remove fuel filter\">" + closeSvg + "</span></span>");
+					if (model) {
+						$chipsContainer.append("<span class=\"vehicle-chip\">" + model + " <span class=\"vehicle-chip-remove\" data-target=\"model\" title=\"Remove\">" + closeSvg + "</span></span>");
 					}
-					if (year) {
-						$chipsContainer.append("<span class=\"vehicle-chip\">Year: " + year + " <span class=\"vehicle-chip-remove\" data-target=\"year\" title=\"Remove year filter\">" + closeSvg + "</span></span>");
+					if (minPrice || maxPrice) {
+						var pLabel = (minPrice ? "$" + minPrice : "$0") + " - " + (maxPrice ? "$" + maxPrice : "Max");
+						$chipsContainer.append("<span class=\"vehicle-chip\">" + pLabel + " <span class=\"vehicle-chip-remove\" data-target=\"price\" title=\"Remove\">" + closeSvg + "</span></span>");
 					}
-					if (trans) {
-						$chipsContainer.append("<span class=\"vehicle-chip\">Trans: " + trans + " <span class=\"vehicle-chip-remove\" data-target=\"trans\" title=\"Remove transmission filter\">" + closeSvg + "</span></span>");
+					if (fromYear || toYear) {
+						var yLabel = (fromYear ? fromYear : "Any") + " - " + (toYear ? toYear : "Any");
+						$chipsContainer.append("<span class=\"vehicle-chip\">" + yLabel + " <span class=\"vehicle-chip-remove\" data-target=\"year\" title=\"Remove\">" + closeSvg + "</span></span>");
+					}
+					if (bodyStyle) {
+						$chipsContainer.append("<span class=\"vehicle-chip\">" + bodyStyle + " <span class=\"vehicle-chip-remove\" data-target=\"body-style\" title=\"Remove\">" + closeSvg + "</span></span>");
 					}
 				}
 
@@ -1372,45 +1444,44 @@ class Dynamic_Sheet_Post_Sync {
 					// Render Pagination buttons if applicable
 					renderPagination(totalMatches, currentPage, perPage);
 					updateActiveChips();
-
-					// Toggle search clear button
-					if ($(".vehicle-search-input").val()) {
-						$(".vehicle-search-clear").css("display", "inline-flex");
-					} else {
-						$(".vehicle-search-clear").hide();
-					}
 				}
 
-				// Search input listener
-				$(document).on("input keyup", ".vehicle-search-input", function() {
-					applyFiltersAndPagination(true);
-				});
-
-				// Clear search button
-				$(document).on("click", ".vehicle-search-clear", function() {
-					$(".vehicle-search-input").val("");
-					applyFiltersAndPagination(true);
-				});
-
-				// Filter Select Change
-				$(document).on("change", ".vehicle-filter-select", function() {
+				// Red Search button listener
+				$(document).on("click", ".vehicle-filter-search-btn", function(e) {
+					e.preventDefault();
 					applyFiltersAndPagination(true);
 				});
 
 				// Reset Filters Button
-				$(document).on("click", ".vehicle-reset-btn", function() {
-					$(".vehicle-search-input").val("");
-					$(".vehicle-filter-select").val("");
+				$(document).on("click", ".vehicle-reset-btn", function(e) {
+					e.preventDefault();
+					$(".vehicle-filter-car-name").val("");
+					$(".vehicle-filter-model").empty().append("<option value=\"\">Select Car Name first</option>").prop("disabled", true);
+					$(".vehicle-filter-min-price").val("");
+					$(".vehicle-filter-max-price").val("");
+					$(".vehicle-filter-from-year").val("");
+					$(".vehicle-filter-to-year").val("");
+					$(".vehicle-filter-body-style").val("");
 					applyFiltersAndPagination(true);
 				});
 
 				// Active Chip Remove Click
 				$(document).on("click", ".vehicle-chip-remove", function() {
 					var target = $(this).data("target");
-					if (target === "search") $(".vehicle-search-input").val("");
-					if (target === "fuel") $(".vehicle-filter-fuel").val("");
-					if (target === "year") $(".vehicle-filter-year").val("");
-					if (target === "trans") $(".vehicle-filter-transmission").val("");
+					if (target === "car-name") {
+						$(".vehicle-filter-car-name").val("");
+						$(".vehicle-filter-model").empty().append("<option value=\"\">Select Car Name first</option>").prop("disabled", true);
+					}
+					if (target === "model") $(".vehicle-filter-model").val("");
+					if (target === "price") {
+						$(".vehicle-filter-min-price").val("");
+						$(".vehicle-filter-max-price").val("");
+					}
+					if (target === "year") {
+						$(".vehicle-filter-from-year").val("");
+						$(".vehicle-filter-to-year").val("");
+					}
+					if (target === "body-style") $(".vehicle-filter-body-style").val("");
 					applyFiltersAndPagination(true);
 				});
 
@@ -2389,6 +2460,9 @@ class Dynamic_Sheet_Post_Sync {
 		$content_index   = ! empty( $content_col_header ) ? self::resolve_col_index( $content_col_header, $headers ) : false;
 		$status_index    = ! empty( $status_col_header ) ? self::resolve_col_index( $status_col_header, $headers ) : false;
 		$price_index     = ! empty( $price_col_header ) ? self::resolve_col_index( $price_col_header, $headers ) : false;
+		if ( false === $price_index ) {
+			$price_index = self::resolve_col_index( 'G', $headers );
+		}
 		$discount_index  = ! empty( $discount_col_header ) ? self::resolve_col_index( $discount_col_header, $headers ) : false;
 		$mileage_col     = isset( $options['field_mileage'] ) && '' !== trim( $options['field_mileage'] ) ? $options['field_mileage'] : 'F';
 		$mileage_index   = self::resolve_col_index( $mileage_col, $headers );
@@ -2415,6 +2489,18 @@ class Dynamic_Sheet_Post_Sync {
 		$transmission_index = self::resolve_col_index( 'Q', $headers );
 		if ( false === $transmission_index ) {
 			$transmission_index = self::resolve_col_index( 'Transmission', $headers );
+		}
+		$car_name_index = self::resolve_col_index( 'C', $headers );
+		if ( false === $car_name_index ) {
+			$car_name_index = self::resolve_col_index( 'Car Name', $headers );
+		}
+		$model_index = self::resolve_col_index( 'D', $headers );
+		if ( false === $model_index ) {
+			$model_index = self::resolve_col_index( 'Model', $headers );
+		}
+		$year_index = self::resolve_col_index( 'E', $headers );
+		if ( false === $year_index ) {
+			$year_index = self::resolve_col_index( 'Year', $headers );
 		}
 		$image_index     = self::resolve_col_index( $field_image_col, $headers );
 		$sub_image_index = self::resolve_col_index( $field_sub_img_col, $headers );
@@ -2610,6 +2696,21 @@ class Dynamic_Sheet_Post_Sync {
 				$transmission_val_sync = ( false !== $transmission_index && isset( $row_data[$transmission_index] ) ) ? sanitize_text_field( trim( $row_data[$transmission_index] ) ) : '';
 				if ( ! empty( $transmission_val_sync ) ) {
 					update_post_meta( $post_id, '_vehicle_transmission', $transmission_val_sync );
+				}
+
+				$car_name_val_sync = ( false !== $car_name_index && isset( $row_data[$car_name_index] ) ) ? sanitize_text_field( trim( $row_data[$car_name_index] ) ) : '';
+				if ( ! empty( $car_name_val_sync ) ) {
+					update_post_meta( $post_id, '_vehicle_car_name', $car_name_val_sync );
+				}
+
+				$model_val_sync = ( false !== $model_index && isset( $row_data[$model_index] ) ) ? sanitize_text_field( trim( $row_data[$model_index] ) ) : '';
+				if ( ! empty( $model_val_sync ) ) {
+					update_post_meta( $post_id, '_vehicle_model', $model_val_sync );
+				}
+
+				$year_val_sync = ( false !== $year_index && isset( $row_data[$year_index] ) ) ? sanitize_text_field( trim( $row_data[$year_index] ) ) : '';
+				if ( ! empty( $year_val_sync ) ) {
+					update_post_meta( $post_id, '_vehicle_year', $year_val_sync );
 				}
 
 				// Save Stock Status Meta.
@@ -2937,10 +3038,12 @@ class Dynamic_Sheet_Post_Sync {
 			return '<div class="vehicle-grid-container"><div class="vehicle-no-results"><h3>' . esc_html__( 'No vehicles available in the inventory yet.', 'dynamic-sheet-sync' ) . '</h3></div></div>';
 		}
 
-		// Collect unique filter options (Fuels, Years, Transmissions).
-		$all_fuels = array();
-		$all_years = array();
-		$all_trans = array();
+		// Collect unique filter options.
+		$all_car_names   = array();
+		$car_models_map  = array(); // [ car_name => [ model1 => true, model2 => true ] ]
+		$all_prices      = array();
+		$all_years       = array();
+		$all_body_styles = array();
 
 		$cards_html = '';
 
@@ -2963,9 +3066,13 @@ class Dynamic_Sheet_Post_Sync {
 			$discount         = get_post_meta( $post_id, '_vehicle_discount', true );
 			$final_price_meta = get_post_meta( $post_id, '_vehicle_final_price', true );
 
+			// Car Name (Column C), Model (Column D), Year (Column E).
+			$car_name_val = get_post_meta( $post_id, '_vehicle_car_name', true );
+			$model_val    = get_post_meta( $post_id, '_vehicle_model', true );
+			$year_val     = get_post_meta( $post_id, '_vehicle_year', true );
+
 			// Parse custom specs for filter attributes.
 			$fuel_val  = '';
-			$year_val  = '';
 			$trans_val = '';
 
 			foreach ( $custom_meta as $spec ) {
@@ -2974,17 +3081,20 @@ class Dynamic_Sheet_Post_Sync {
 					continue;
 				}
 
+				if ( empty( $year_val ) && ( stripos( $spec['label'], 'Year' ) !== false || stripos( $spec['meta_key'], 'year' ) !== false ) ) {
+					$year_val = $val;
+				}
+				if ( empty( $car_name_val ) && ( stripos( $spec['label'], 'Car Name' ) !== false || stripos( $spec['meta_key'], 'car_name' ) !== false || stripos( $spec['label'], 'Make' ) !== false ) ) {
+					$car_name_val = $val;
+				}
+				if ( empty( $model_val ) && ( stripos( $spec['label'], 'Model' ) !== false || stripos( $spec['meta_key'], 'model' ) !== false ) ) {
+					$model_val = $val;
+				}
 				if ( stripos( $spec['label'], 'Fuel' ) !== false || stripos( $spec['meta_key'], 'fuel' ) !== false ) {
 					$fuel_val = $val;
-					$all_fuels[ $val ] = true;
-				}
-				if ( stripos( $spec['label'], 'Year' ) !== false || stripos( $spec['meta_key'], 'year' ) !== false ) {
-					$year_val = $val;
-					$all_years[ $val ] = true;
 				}
 				if ( stripos( $spec['label'], 'Trans' ) !== false || stripos( $spec['meta_key'], 'trans' ) !== false || stripos( $spec['label'], 'Gear' ) !== false ) {
 					$trans_val = $val;
-					$all_trans[ $val ] = true;
 				}
 			}
 
@@ -3179,6 +3289,32 @@ class Dynamic_Sheet_Post_Sync {
 				$card_badge   = 'Save ' . $atts['currency'] . number_format_i18n( $saved );
 			}
 
+			// Populate filter collections.
+			if ( ! empty( $car_name_val ) ) {
+				$car_name_trimmed = trim( $car_name_val );
+				$all_car_names[ $car_name_trimmed ] = true;
+				if ( ! isset( $car_models_map[ $car_name_trimmed ] ) ) {
+					$car_models_map[ $car_name_trimmed ] = array();
+				}
+				if ( ! empty( $model_val ) ) {
+					$car_models_map[ $car_name_trimmed ][ trim( $model_val ) ] = true;
+				}
+			}
+			if ( $final_price > 0 ) {
+				$all_prices[] = $final_price;
+			} elseif ( $clean_price > 0 ) {
+				$all_prices[] = $clean_price;
+			}
+			if ( ! empty( $year_val ) ) {
+				$y_num = intval( preg_replace( '/[^0-9]/', '', strval( $year_val ) ) );
+				if ( $y_num > 1900 ) {
+					$all_years[ $y_num ] = true;
+				}
+			}
+			if ( ! empty( $body_style ) ) {
+				$all_body_styles[ trim( $body_style ) ] = true;
+			}
+
 			// Get Gallery Images (Column AA + AB).
 			$gallery = get_post_meta( $post_id, '_vehicle_gallery', true );
 			if ( ! is_array( $gallery ) || empty( $gallery ) ) {
@@ -3193,14 +3329,18 @@ class Dynamic_Sheet_Post_Sync {
 
 			$image_count = count( $gallery );
 
-			// Build Card HTML with Modern Horizontal Layout: Left slider column, Right details column (3 lines).
+			// Build Card HTML (Vertical Flow).
 			ob_start();
 			?>
 			<div class="vehicle-card" 
 				data-title="<?php echo esc_attr( $car_title ); ?>" 
 				data-id="<?php echo esc_attr( $car_id ); ?>" 
+				data-car-name="<?php echo esc_attr( trim( $car_name_val ) ); ?>"
+				data-model="<?php echo esc_attr( trim( $model_val ) ); ?>"
+				data-price="<?php echo esc_attr( $final_price ); ?>"
+				data-year="<?php echo esc_attr( trim( $year_val ) ); ?>"
+				data-body-style="<?php echo esc_attr( trim( $body_style ) ); ?>"
 				data-fuel="<?php echo esc_attr( $fuel_val ); ?>" 
-				data-year="<?php echo esc_attr( $year_val ); ?>" 
 				data-transmission="<?php echo esc_attr( $trans_val ); ?>"
 				data-mileage="<?php echo esc_attr( $mileage ); ?>"
 				data-url="<?php echo esc_url( $permalink ); ?>">
@@ -3300,76 +3440,174 @@ class Dynamic_Sheet_Post_Sync {
 
 		wp_reset_postdata();
 
-		// Build Filter Bar HTML if enabled.
+		// Prepare Filter Options & Lists.
+		ksort( $all_car_names, SORT_NATURAL | SORT_FLAG_CASE );
+		ksort( $all_body_styles, SORT_NATURAL | SORT_FLAG_CASE );
+
+		// Clean and sort models per car name.
+		$car_models_clean = array();
+		foreach ( $car_models_map as $c_name => $m_list ) {
+			$models = array_keys( $m_list );
+			natcasesort( $models );
+			$car_models_clean[ $c_name ] = array_values( $models );
+		}
+
+		// Sort Years (Descending for From/To Year).
+		$sorted_years = array_keys( $all_years );
+		rsort( $sorted_years, SORT_NUMERIC );
+
+		// Price Range Options: Generate sensible price brackets or use unique prices.
+		$min_price_found = ! empty( $all_prices ) ? min( $all_prices ) : 0;
+		$max_price_found = ! empty( $all_prices ) ? max( $all_prices ) : 0;
+
+		$price_steps = array();
+		if ( $max_price_found > 0 ) {
+			$step_intervals = array( 5000, 10000, 15000, 20000, 25000, 30000, 40000, 50000, 60000, 75000, 100000, 150000, 200000 );
+			foreach ( $step_intervals as $step_val ) {
+				if ( $step_val <= $max_price_found * 1.25 ) {
+					$price_steps[] = $step_val;
+				}
+			}
+			// If empty or small prices, fallback to rounded min and max
+			if ( empty( $price_steps ) ) {
+				$price_steps = array( round( $min_price_found ), round( $max_price_found ) );
+			}
+		}
+
+		$select_arrow_svg = '<span class="vehicle-select-arrow"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>';
+
+		// Build Filter Sidebar HTML if enabled.
 		$filter_bar_html = '';
 		if ( 'yes' === $atts['show_filter'] || 'yes' === $atts['show_search'] ) {
-			$filter_bar_html .= '<div class="vehicle-filter-wrapper">';
-			$filter_bar_html .= '<div class="vehicle-filter-main-row">';
+			$filter_bar_html .= '<aside class="vehicle-filter-wrapper" data-models-map="' . esc_attr( wp_json_encode( $car_models_clean ) ) . '">';
+			$filter_bar_html .= '<div class="vehicle-filter-header">';
+			$filter_bar_html .= '<h4 class="vehicle-filter-title">' . esc_html__( 'Filter Vehicles', 'dynamic-sheet-sync' ) . '</h4>';
+			$filter_bar_html .= '</div>';
 
-			if ( 'yes' === $atts['show_search'] ) {
-				$filter_bar_html .= '
-					<div class="vehicle-search-box">						
-						<input type="text" class="vehicle-search-input" placeholder="' . esc_attr__( 'What are you looking for?', 'dynamic-sheet-sync' ) . '" />
-						<button type="button" class="vehicle-search-clear" title="' . esc_attr__( 'Clear search', 'dynamic-sheet-sync' ) . '">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-						</button>
-					</div>
-				';
+			$filter_bar_html .= '<div class="vehicle-filter-rows">';
+
+			// Row 1: Car Name (Column C).
+			$filter_bar_html .= '
+				<div class="vehicle-filter-row">
+					<label class="vehicle-filter-label">' . esc_html__( 'Car Name', 'dynamic-sheet-sync' ) . '</label>
+					<div class="vehicle-select-wrap">
+						<select class="vehicle-filter-select vehicle-filter-car-name">
+							<option value="">' . esc_html__( 'All Car Names', 'dynamic-sheet-sync' ) . '</option>';
+			foreach ( array_keys( $all_car_names ) as $cn ) {
+				$filter_bar_html .= '<option value="' . esc_attr( $cn ) . '">' . esc_html( $cn ) . '</option>';
 			}
+			$filter_bar_html .= '
+						</select>
+						' . $select_arrow_svg . '
+					</div>
+				</div>
+			';
 
-			if ( 'yes' === $atts['show_filter'] ) {
-				$filter_bar_html .= '<div class="vehicle-filter-controls">';
-
-				$select_arrow_svg = '<span class="vehicle-select-arrow"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>';
-
-				// Fuel Filter.
-				if ( ! empty( $all_fuels ) ) {
-					$filter_bar_html .= '
+			// Row 2: Model (Column D) - Disabled until Car Name is chosen.
+			$filter_bar_html .= '
+				<div class="vehicle-filter-row">
+					<label class="vehicle-filter-label">' . esc_html__( 'Model', 'dynamic-sheet-sync' ) . '</label>
 					<div class="vehicle-select-wrap">
-						<select class="vehicle-filter-select vehicle-filter-fuel">
-							<option value="">' . esc_html__( 'All Fuels', 'dynamic-sheet-sync' ) . '</option>';
-					foreach ( array_keys( $all_fuels ) as $f ) {
-						$filter_bar_html .= '<option value="' . esc_attr( $f ) . '">' . esc_html( $f ) . '</option>';
-					}
-					$filter_bar_html .= '</select>' . $select_arrow_svg . '</div>';
-				}
+						<select class="vehicle-filter-select vehicle-filter-model" disabled>
+							<option value="">' . esc_html__( 'Select Car Name first', 'dynamic-sheet-sync' ) . '</option>
+						</select>
+						' . $select_arrow_svg . '
+					</div>
+				</div>
+			';
 
-				// Year Filter.
-				if ( ! empty( $all_years ) ) {
-					krsort( $all_years );
-					$filter_bar_html .= '
+			// Row 3: Price (Column G) - Min price and Max price in same row.
+			$filter_bar_html .= '
+				<div class="vehicle-filter-row">
+					<label class="vehicle-filter-label">' . esc_html__( 'Price Range', 'dynamic-sheet-sync' ) . '</label>
+					<div class="vehicle-filter-two-cols">
+						<div class="vehicle-select-wrap">
+							<select class="vehicle-filter-select vehicle-filter-min-price">
+								<option value="">' . esc_html__( 'Min Price', 'dynamic-sheet-sync' ) . '</option>';
+			foreach ( $price_steps as $p_val ) {
+				$filter_bar_html .= '<option value="' . esc_attr( $p_val ) . '">' . esc_html( $atts['currency'] . number_format_i18n( $p_val ) ) . '</option>';
+			}
+			$filter_bar_html .= '
+							</select>
+							' . $select_arrow_svg . '
+						</div>
+						<div class="vehicle-select-wrap">
+							<select class="vehicle-filter-select vehicle-filter-max-price">
+								<option value="">' . esc_html__( 'Max Price', 'dynamic-sheet-sync' ) . '</option>';
+			foreach ( $price_steps as $p_val ) {
+				$filter_bar_html .= '<option value="' . esc_attr( $p_val ) . '">' . esc_html( $atts['currency'] . number_format_i18n( $p_val ) ) . '</option>';
+			}
+			$filter_bar_html .= '
+							</select>
+							' . $select_arrow_svg . '
+						</div>
+					</div>
+				</div>
+			';
+
+			// Row 4: Year (Column E) - From Year and To Year in same row.
+			$filter_bar_html .= '
+				<div class="vehicle-filter-row">
+					<label class="vehicle-filter-label">' . esc_html__( 'Year Range', 'dynamic-sheet-sync' ) . '</label>
+					<div class="vehicle-filter-two-cols">
+						<div class="vehicle-select-wrap">
+							<select class="vehicle-filter-select vehicle-filter-from-year">
+								<option value="">' . esc_html__( 'From Year', 'dynamic-sheet-sync' ) . '</option>';
+			foreach ( $sorted_years as $y_val ) {
+				$filter_bar_html .= '<option value="' . esc_attr( $y_val ) . '">' . esc_html( $y_val ) . '</option>';
+			}
+			$filter_bar_html .= '
+							</select>
+							' . $select_arrow_svg . '
+						</div>
+						<div class="vehicle-select-wrap">
+							<select class="vehicle-filter-select vehicle-filter-to-year">
+								<option value="">' . esc_html__( 'To Year', 'dynamic-sheet-sync' ) . '</option>';
+			foreach ( $sorted_years as $y_val ) {
+				$filter_bar_html .= '<option value="' . esc_attr( $y_val ) . '">' . esc_html( $y_val ) . '</option>';
+			}
+			$filter_bar_html .= '
+							</select>
+							' . $select_arrow_svg . '
+						</div>
+					</div>
+				</div>
+			';
+
+			// Row 5: Body Style (Column M).
+			$filter_bar_html .= '
+				<div class="vehicle-filter-row">
+					<label class="vehicle-filter-label">' . esc_html__( 'Body Style', 'dynamic-sheet-sync' ) . '</label>
 					<div class="vehicle-select-wrap">
-						<select class="vehicle-filter-select vehicle-filter-year">
-							<option value="">' . esc_html__( 'All Years', 'dynamic-sheet-sync' ) . '</option>';
-					foreach ( array_keys( $all_years ) as $y ) {
-						$filter_bar_html .= '<option value="' . esc_attr( $y ) . '">' . esc_html( $y ) . '</option>';
-					}
-					$filter_bar_html .= '</select>' . $select_arrow_svg . '</div>';
-				}
+						<select class="vehicle-filter-select vehicle-filter-body-style">
+							<option value="">' . esc_html__( 'All Body Styles', 'dynamic-sheet-sync' ) . '</option>';
+			foreach ( array_keys( $all_body_styles ) as $bs ) {
+				$filter_bar_html .= '<option value="' . esc_attr( $bs ) . '">' . esc_html( $bs ) . '</option>';
+			}
+			$filter_bar_html .= '
+						</select>
+						' . $select_arrow_svg . '
+					</div>
+				</div>
+			';
 
-				// Transmission Filter.
-				if ( ! empty( $all_trans ) ) {
-					$filter_bar_html .= '
-					<div class="vehicle-select-wrap">
-						<select class="vehicle-filter-select vehicle-filter-transmission">
-							<option value="">' . esc_html__( 'All Transmissions', 'dynamic-sheet-sync' ) . '</option>';
-					foreach ( array_keys( $all_trans ) as $t ) {
-						$filter_bar_html .= '<option value="' . esc_attr( $t ) . '">' . esc_html( $t ) . '</option>';
-					}
-					$filter_bar_html .= '</select>' . $select_arrow_svg . '</div>';
-				}
-
-				$filter_bar_html .= '
+			// Row 6: Red color Search button + Reset button.
+			$filter_bar_html .= '
+				<div class="vehicle-filter-row vehicle-filter-actions">
+					<button type="button" class="vehicle-filter-search-btn">
+						<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+						<span>' . esc_html__( 'Search Vehicles', 'dynamic-sheet-sync' ) . '</span>
+					</button>
 					<button type="button" class="vehicle-reset-btn">
 						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
 						<span>' . esc_html__( 'Reset Filters', 'dynamic-sheet-sync' ) . '</span>
-					</button>';
-				$filter_bar_html .= '</div>';
-			}
+					</button>
+				</div>
+			';
 
-			$filter_bar_html .= '</div>';
+			$filter_bar_html .= '</div>'; // End vehicle-filter-rows.
 
-			// Meta Status Row (Active chips & live result counter).
+			// Live result status inside filter sidebar.
 			$filter_bar_html .= '
 				<div class="vehicle-filter-meta-bar">
 					<div class="vehicle-count-badge">' . esc_html__( 'Showing vehicles...', 'dynamic-sheet-sync' ) . '</div>
@@ -3377,16 +3615,17 @@ class Dynamic_Sheet_Post_Sync {
 				</div>
 			';
 
-			$filter_bar_html .= '</div>';
+			$filter_bar_html .= '</aside>';
 		}
 
 		$cols = max( 1, min( 4, intval( $atts['columns'] ) ) );
-
 		$per_page_attr = intval( $atts['per_page'] );
 
-		// Final Output assembly.
+		// Final Output assembly: Sidebar on left on desktop, on top on mobile.
 		$output  = '<div class="vehicle-grid-container">';
+		$output .= '<div class="vehicle-catalog-layout">';
 		$output .= $filter_bar_html;
+		$output .= '<div class="vehicle-catalog-content">';
 		$output .= '<div class="vehicle-grid" data-per-page="' . esc_attr( $per_page_attr ) . '" style="--vg-cols: ' . esc_attr( $cols ) . ';">';
 		$output .= $cards_html;
 		$output .= '<div class="vehicle-no-results" style="display:none;">
@@ -3394,9 +3633,11 @@ class Dynamic_Sheet_Post_Sync {
 			<h3>' . esc_html__( 'No matching vehicles found', 'dynamic-sheet-sync' ) . '</h3>
 			<p>' . esc_html__( 'Try adjusting your search criteria or reset filters to see all available inventory.', 'dynamic-sheet-sync' ) . '</p>
 		</div>';
-		$output .= '</div>';
+		$output .= '</div>'; // End vehicle-grid.
 		$output .= '<div class="vehicle-pagination-container"></div>';
-		$output .= '</div>';
+		$output .= '</div>'; // End vehicle-catalog-content.
+		$output .= '</div>'; // End vehicle-catalog-layout.
+		$output .= '</div>'; // End vehicle-grid-container.
 
 		return $output;
 	}
