@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamic Sheet to Post Type Sync & Vehicle Product Grid
  * Description: Automatically imports and syncs Google Sheet vehicle inventory into WordPress posts/products with multi-column titles, Google Drive image gallery slider (AA & AB columns), responsive creative filters, 9-card pagination, and dedicated full vehicle information pages.
- * Version: 2.2.4
+ * Version: 2.2.5
  * Author: Eshmika Hettiarachchi
  * Text Domain: dynamic-sheet-sync
  * License: GPL2
@@ -365,22 +365,31 @@ class Dynamic_Sheet_Post_Sync {
 			}
 
 			/* ==========================================================================
-			   VEHICLE PRODUCT GRID (1 COLUMN HORIZONTAL CARDS)
+			   VEHICLE PRODUCT GRID (3 COLUMN VERTICAL CARDS)
 			   ========================================================================== */
 			.vehicle-grid {
 				display: grid;
-				grid-template-columns: 1fr;
-				gap: 20px;
+				grid-template-columns: repeat(var(--vg-cols, 3), minmax(0, 1fr));
+				gap: 24px;
+			}
+			@media (max-width: 1024px) {
+				.vehicle-grid {
+					grid-template-columns: repeat(2, minmax(0, 1fr));
+					gap: 20px;
+				}
 			}
 			@media (max-width: 640px) {
-				.vehicle-grid { gap: 16px; }
+				.vehicle-grid {
+					grid-template-columns: 1fr;
+					gap: 18px;
+				}
 				.vehicle-filter-wrapper { padding: 16px; }
 				.vehicle-select-wrap { width: 100%; min-width: 100%; }
 				.vehicle-reset-btn { width: 100%; justify-content: center; }
 			}
 
 			/* ==========================================================================
-			   HORIZONTAL 2-COLUMN VEHICLE CARD
+			   VERTICAL VEHICLE CARD DESIGN
 			   ========================================================================== */
 			.vehicle-card {
 				background: #ffffff;
@@ -388,30 +397,31 @@ class Dynamic_Sheet_Post_Sync {
 				border-radius: var(--vg-radius-lg);
 				overflow: hidden;
 				display: flex;
-				flex-direction: row;
-				align-items: stretch;
+				flex-direction: column;
 				transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease;
-				box-shadow: 0 2px 10px rgba(23, 10, 61, 0.04);
+				box-shadow: 0 3px 12px rgba(23, 10, 61, 0.05);
 				position: relative;
 				cursor: pointer;
+				height: 100%;
 			}
 			.vehicle-card:hover {
-				transform: translateY(-3px);
-				box-shadow: 0 10px 24px rgba(23, 10, 61, 0.1);
-				border-color: #d2cbe0;
+				transform: translateY(-4px);
+				box-shadow: 0 12px 28px rgba(23, 10, 61, 0.12);
+				border-color: #cbd5e1;
 			}
 
 			/* ==========================================================================
-			   LEFT COLUMN: IMAGE SLIDER (SMALL WIDTH)
+			   ROW 1: IMAGE SLIDER CONTAINER
 			   ========================================================================== */
 			.vehicle-card-slider-container {
 				position: relative;
-				flex: 0 0 280px;
-				width: 280px;
-				min-height: 190px;
+				width: 100%;
+				height: 220px;
+				min-height: 220px;
 				background: #0f172a;
 				overflow: hidden;
 				user-select: none;
+				flex-shrink: 0;
 			}
 			.vehicle-slider-track {
 				display: flex;
@@ -445,18 +455,19 @@ class Dynamic_Sheet_Post_Sync {
 				justify-content: center;
 				color: #94a3b8;
 				background: linear-gradient(135deg, #f8f6fc 0%, #ede8f5 100%);
+				text-decoration: none;
 			}
 			.vehicle-card-placeholder svg { width: 44px; height: 44px; fill: currentColor; }
 
-			/* Slider Navigation Controls (Creative Circular Glassmorphism Design) */
+			/* Slider Navigation Controls */
 			.vehicle-slider-btn {
 				position: absolute;
 				top: 50%;
 				transform: translateY(-50%) scale(0.92);
-				width: 34px;
-				height: 34px;
+				width: 32px;
+				height: 32px;
 				border-radius: 50%;
-				background: rgba(255, 255, 255, 0.88);
+				background: rgba(255, 255, 255, 0.9);
 				color: #170a3d;
 				border: 1px solid rgba(255, 255, 255, 0.95);
 				display: inline-flex;
@@ -465,17 +476,17 @@ class Dynamic_Sheet_Post_Sync {
 				cursor: pointer;
 				z-index: 6;
 				opacity: 0;
-				box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22), 0 1px 3px rgba(0, 0, 0, 0.12);
-				backdrop-filter: blur(8px);
-				-webkit-backdrop-filter: blur(8px);
-				transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+				box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+				backdrop-filter: blur(6px);
+				-webkit-backdrop-filter: blur(6px);
+				transition: all 0.25s ease;
 				padding: 0;
 			}
 			.vehicle-slider-btn svg {
-				width: 15px;
-				height: 15px;
-				stroke-width: 2.6;
-				transition: transform 0.2s ease, stroke 0.2s ease;
+				width: 14px;
+				height: 14px;
+				stroke-width: 2.5;
+				transition: transform 0.2s ease;
 			}
 			.vehicle-card:hover .vehicle-slider-btn {
 				opacity: 0.92;
@@ -483,31 +494,22 @@ class Dynamic_Sheet_Post_Sync {
 			}
 			.vehicle-slider-btn:hover {
 				opacity: 1 !important;
-				background: #3a1f62;
+				background: #dc2626;
 				color: #ffffff;
-				border-color: #3a1f62;
-				transform: translateY(-50%) scale(1.12);
-				box-shadow: 0 6px 18px rgba(58, 31, 98, 0.45);
+				border-color: #dc2626;
+				transform: translateY(-50%) scale(1.1);
 			}
-			.vehicle-slider-btn.prev {
-				left: 10px;
-			}
-			.vehicle-slider-btn.next {
-				right: 10px;
-			}
-			.vehicle-slider-btn.prev:hover svg {
-				transform: translateX(-1.5px);
-			}
-			.vehicle-slider-btn.next:hover svg {
-				transform: translateX(1.5px);
-			}
+			.vehicle-slider-btn.prev { left: 8px; }
+			.vehicle-slider-btn.next { right: 8px; }
+			.vehicle-slider-btn.prev:hover svg { transform: translateX(-1.5px); }
+			.vehicle-slider-btn.next:hover svg { transform: translateX(1.5px); }
 
 			/* Slider Counter & Dots */
 			.vehicle-slider-counter {
 				position: absolute;
 				bottom: 8px;
 				right: 10px;
-				background: rgba(23, 10, 61, 0.78);
+				background: rgba(15, 23, 42, 0.78);
 				color: #ffffff;
 				font-size: 10.5px;
 				font-weight: 700;
@@ -535,81 +537,101 @@ class Dynamic_Sheet_Post_Sync {
 				cursor: pointer;
 			}
 			.vehicle-slider-dot.active {
-				width: 15px;
+				width: 14px;
 				border-radius: 8px;
 				background: #ffffff;
 			}
 
 			/* ==========================================================================
-			   RIGHT COLUMN: VEHICLE DETAILS (EXACTLY 3 CLEAN LINES)
+			   ROW-BY-ROW VEHICLE CARD BODY
 			   ========================================================================== */
 			.vehicle-card-body {
-				flex: 1;
-				padding: 24px 28px;
+				padding: 18px 20px 20px;
 				display: flex;
 				flex-direction: column;
-				justify-content: center;
+				flex-grow: 1;
 				background: #ffffff;
-				min-width: 0;
-			}
-			.vehicle-card-details {
-				display: flex;
-				flex-direction: column;
-				gap: 8px;
-				min-width: 0;
 			}
 
-			/* Line 1: Vehicle Card Title */
+			/* Row 2: Vehicle Card Title */
 			.vehicle-card-title {
 				font-size: 16px;
 				font-weight: 700;
-				color: #170a3d;
-				margin: 0;
+				color: #0f172a;
+				margin: 0 0 14px 0;
 				line-height: 1.35;
-				letter-spacing: -0.25px;
-				word-break: break-word;
+				letter-spacing: -0.2px;
+				min-height: 44px;
+				display: -webkit-box;
+				-webkit-line-clamp: 2;
+				-webkit-box-orient: vertical;
+				overflow: hidden;
 			}
 			.vehicle-card-title a {
-				color: #170a3d;
+				color: #0f172a;
 				text-decoration: none;
 				transition: color 0.2s ease;
 			}
 			.vehicle-card-title a:hover {
-				color: #3a1f62;
+				color: #dc2626;
 			}
 
-			/* Line 2: Mileage | Body Style | Condition (Plain values only, simple text) */
-			.vehicle-card-specs-line {
-				font-size: 14px;
-				font-weight: 500;
-				color: #6b637d;
-				line-height: 1.4;
-				margin: 0;
-				letter-spacing: 0.1px;
+			/* Row 3: 2 Rows x 3 Columns Grid Only Details with Gray Icon */
+			.vehicle-card-specs-grid {
+				display: grid;
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+				gap: 10px 8px;
+				padding: 12px 10px;
+				background: #f8fafc;
+				border: 1px solid #e2e8f0;
+				border-radius: 10px;
+				margin-bottom: 16px;
+			}
+			.vehicle-card-spec-item {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				min-width: 0;
+			}
+			.vehicle-card-spec-icon {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				flex-shrink: 0;
+				color: #94a3b8; /* Gray icon */
+			}
+			.vehicle-card-spec-icon svg {
+				width: 15px;
+				height: 15px;
+				fill: currentColor;
+			}
+			.vehicle-card-spec-val {
+				font-size: 12.5px;
+				font-weight: 600;
+				color: #334155;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
 			}
 
-			/* Line 3: Price & Creative Discount Presentation */
+			/* Row 4: Unique Price & Discount Presentation */
 			.vehicle-card-price-unique {
-				font-size: 23px;
-				font-weight: 800;
-				color: #3a1f62;
-				letter-spacing: -0.5px;
-				line-height: 1.2;
-				margin-top: 4px;
-				font-feature-settings: "tnum";
-				font-variant-numeric: tabular-nums;
 				display: flex;
 				align-items: baseline;
 				flex-wrap: wrap;
 				gap: 8px 10px;
+				margin-bottom: 16px;
+				margin-top: auto;
 			}
 			.vehicle-card-price-current {
-				font-size: 23px;
+				font-size: 22px;
 				font-weight: 800;
-				color: #3a1f62;
+				color: #0f172a;
+				letter-spacing: -0.4px;
+				line-height: 1.15;
 			}
 			.vehicle-card-price-original {
-				font-size: 15px;
+				font-size: 14.5px;
 				font-weight: 600;
 				color: #94a3b8;
 				text-decoration: line-through;
@@ -619,40 +641,45 @@ class Dynamic_Sheet_Post_Sync {
 			.vehicle-card-discount-badge {
 				display: inline-flex;
 				align-items: center;
-				font-size: 11.5px;
+				font-size: 11px;
 				font-weight: 700;
 				background: #ecfdf5;
 				color: #059669;
 				border: 1px solid #a7f3d0;
-				padding: 2px 8px;
+				padding: 2px 7px;
 				border-radius: 6px;
 				letter-spacing: 0.2px;
-				vertical-align: middle;
 			}
 
-			/* Responsive styling for horizontal cards */
-			@media (max-width: 768px) {
-				.vehicle-card {
-					flex-direction: column;
-				}
-				.vehicle-card-slider-container {
-					flex: none;
-					width: 100%;
-					height: 220px;
-					min-height: 220px;
-				}
-				.vehicle-card-body {
-					padding: 18px 20px;
-				}
-				.vehicle-card-title {
-					font-size: 15px;
-				}
-				.vehicle-card-specs-line {
-					font-size: 13.5px;
-				}
-				.vehicle-card-price-unique {
-					font-size: 21px;
-				}
+			/* Row 5: Explore More Button (Red Background, White Text) */
+			.vehicle-card-action {
+				margin-top: 0;
+			}
+			.vehicle-card-btn-explore {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 100%;
+				padding: 10px 16px;
+				background: #dc2626; /* Red color background */
+				color: #ffffff !important; /* White color text */
+				font-size: 13.5px;
+				font-weight: 700;
+				letter-spacing: 0.3px;
+				border-radius: 8px;
+				text-align: center;
+				text-decoration: none !important;
+				border: 1px solid #dc2626;
+				box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+				transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+				box-sizing: border-box;
+			}
+			.vehicle-card-btn-explore:hover {
+				background: #b91c1c;
+				border-color: #b91c1c;
+				color: #ffffff !important;
+				box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+				transform: translateY(-1px);
 			}
 
 			/* ==========================================================================
@@ -721,16 +748,21 @@ class Dynamic_Sheet_Post_Sync {
 			/* Responsive mobile styling for vehicle card */
 			@media (max-width: 640px) {
 				.vehicle-card-title {
-					font-size: 14px !important;
-				}
-				.vehicle-card-specs-line {
-					font-size: 13px !important;
+					font-size: 14.5px !important;
+					min-height: auto;
 				}
 				.vehicle-card-price-unique {
 					font-size: 20px !important;
 				}
 				.vehicle-card-body {
-					padding: 16px 18px;
+					padding: 14px 16px 16px;
+				}
+				.vehicle-card-specs-grid {
+					padding: 10px 8px;
+					gap: 8px 6px;
+				}
+				.vehicle-card-spec-val {
+					font-size: 11.5px;
 				}
 			}
 
@@ -2368,6 +2400,22 @@ class Dynamic_Sheet_Post_Sync {
 		if ( false === $condition_index ) {
 			$condition_index = self::resolve_col_index( 'Condition', $headers );
 		}
+		$fuel_index = self::resolve_col_index( 'S', $headers );
+		if ( false === $fuel_index ) {
+			$fuel_index = self::resolve_col_index( 'Fuel Type', $headers );
+		}
+		$power_options_index = self::resolve_col_index( 'T', $headers );
+		if ( false === $power_options_index ) {
+			$power_options_index = self::resolve_col_index( 'Power Options', $headers );
+		}
+		$driveline_index = self::resolve_col_index( 'R', $headers );
+		if ( false === $driveline_index ) {
+			$driveline_index = self::resolve_col_index( 'Driveline', $headers );
+		}
+		$transmission_index = self::resolve_col_index( 'Q', $headers );
+		if ( false === $transmission_index ) {
+			$transmission_index = self::resolve_col_index( 'Transmission', $headers );
+		}
 		$image_index     = self::resolve_col_index( $field_image_col, $headers );
 		$sub_image_index = self::resolve_col_index( $field_sub_img_col, $headers );
 
@@ -2542,6 +2590,26 @@ class Dynamic_Sheet_Post_Sync {
 				$condition_val = ( false !== $condition_index && isset( $row_data[$condition_index] ) ) ? sanitize_text_field( trim( $row_data[$condition_index] ) ) : '';
 				if ( ! empty( $condition_val ) ) {
 					update_post_meta( $post_id, '_vehicle_condition', $condition_val );
+				}
+
+				$fuel_val_sync = ( false !== $fuel_index && isset( $row_data[$fuel_index] ) ) ? sanitize_text_field( trim( $row_data[$fuel_index] ) ) : '';
+				if ( ! empty( $fuel_val_sync ) ) {
+					update_post_meta( $post_id, '_vehicle_fuel', $fuel_val_sync );
+				}
+
+				$power_options_val_sync = ( false !== $power_options_index && isset( $row_data[$power_options_index] ) ) ? sanitize_text_field( trim( $row_data[$power_options_index] ) ) : '';
+				if ( ! empty( $power_options_val_sync ) ) {
+					update_post_meta( $post_id, '_vehicle_power_options', $power_options_val_sync );
+				}
+
+				$driveline_val_sync = ( false !== $driveline_index && isset( $row_data[$driveline_index] ) ) ? sanitize_text_field( trim( $row_data[$driveline_index] ) ) : '';
+				if ( ! empty( $driveline_val_sync ) ) {
+					update_post_meta( $post_id, '_vehicle_driveline', $driveline_val_sync );
+				}
+
+				$transmission_val_sync = ( false !== $transmission_index && isset( $row_data[$transmission_index] ) ) ? sanitize_text_field( trim( $row_data[$transmission_index] ) ) : '';
+				if ( ! empty( $transmission_val_sync ) ) {
+					update_post_meta( $post_id, '_vehicle_transmission', $transmission_val_sync );
 				}
 
 				// Save Stock Status Meta.
@@ -2832,7 +2900,7 @@ class Dynamic_Sheet_Post_Sync {
 		$custom_meta      = isset( $options['custom_meta'] ) && is_array( $options['custom_meta'] ) ? $options['custom_meta'] : array();
 
 		$atts = shortcode_atts( array(
-			'columns'        => '1',
+			'columns'        => '3',
 			'per_page'       => '9', // Default to 9 vehicles max per page with pagination
 			'posts_per_page' => '-1', // Query all vehicles so frontend client can filter and paginate
 			'post_status'    => 'any',
@@ -2945,7 +3013,7 @@ class Dynamic_Sheet_Post_Sync {
 				}
 			}
 
-			// Body Style (Column M) & Condition (Column V).
+			// Body Style (Column M).
 			$body_style = get_post_meta( $post_id, '_vehicle_body_style', true );
 			if ( empty( $body_style ) ) {
 				foreach ( $custom_meta as $spec ) {
@@ -2961,6 +3029,7 @@ class Dynamic_Sheet_Post_Sync {
 				}
 			}
 
+			// Condition (column V).
 			$condition = get_post_meta( $post_id, '_vehicle_condition', true );
 			if ( empty( $condition ) ) {
 				foreach ( $custom_meta as $spec ) {
@@ -2976,13 +3045,114 @@ class Dynamic_Sheet_Post_Sync {
 				}
 			}
 
-			// Spec text line 2: Mileage + Km | Body Style | Condition (plain text values only).
-			$specs_line_items = array_filter( array( $mileage_display, $body_style, $condition ), function( $val ) {
-				return null !== $val && '' !== trim( strval( $val ) );
-			} );
-			$specs_line_text = implode( ' | ', $specs_line_items );
+			// Fuel Type (column S).
+			$fuel_display = get_post_meta( $post_id, '_vehicle_fuel', true );
+			if ( empty( $fuel_display ) && ! empty( $fuel_val ) ) {
+				$fuel_display = $fuel_val;
+			}
+			if ( empty( $fuel_display ) ) {
+				foreach ( $custom_meta as $spec ) {
+					if ( ( isset( $spec['sheet_col'] ) && 'S' === strtoupper( trim( $spec['sheet_col'] ) ) )
+						|| stripos( $spec['label'], 'Fuel' ) !== false
+						|| stripos( $spec['meta_key'], 'fuel' ) !== false ) {
+						$f_val = get_post_meta( $post_id, $spec['meta_key'], true );
+						if ( ! empty( $f_val ) ) {
+							$fuel_display = $f_val;
+							break;
+						}
+					}
+				}
+			}
 
-			// Format Price line 3 (Creative Selling Price - Discount presentation).
+			// Power Options (column T).
+			$power_options_display = get_post_meta( $post_id, '_vehicle_power_options', true );
+			if ( empty( $power_options_display ) ) {
+				foreach ( $custom_meta as $spec ) {
+					if ( ( isset( $spec['sheet_col'] ) && 'T' === strtoupper( trim( $spec['sheet_col'] ) ) )
+						|| stripos( $spec['label'], 'Power' ) !== false
+						|| stripos( $spec['meta_key'], 'power' ) !== false ) {
+						$po_val = get_post_meta( $post_id, $spec['meta_key'], true );
+						if ( ! empty( $po_val ) ) {
+							$power_options_display = $po_val;
+							break;
+						}
+					}
+				}
+			}
+
+			// Driveline (column R).
+			$driveline_display = get_post_meta( $post_id, '_vehicle_driveline', true );
+			if ( empty( $driveline_display ) ) {
+				foreach ( $custom_meta as $spec ) {
+					if ( ( isset( $spec['sheet_col'] ) && 'R' === strtoupper( trim( $spec['sheet_col'] ) ) )
+						|| stripos( $spec['label'], 'Drive' ) !== false
+						|| stripos( $spec['meta_key'], 'drive' ) !== false ) {
+						$dr_val = get_post_meta( $post_id, $spec['meta_key'], true );
+						if ( ! empty( $dr_val ) ) {
+							$driveline_display = $dr_val;
+							break;
+						}
+					}
+				}
+			}
+
+			// Transmission (column Q).
+			$transmission_display = get_post_meta( $post_id, '_vehicle_transmission', true );
+			if ( empty( $transmission_display ) && ! empty( $trans_val ) ) {
+				$transmission_display = $trans_val;
+			}
+			if ( empty( $transmission_display ) ) {
+				foreach ( $custom_meta as $spec ) {
+					if ( ( isset( $spec['sheet_col'] ) && 'Q' === strtoupper( trim( $spec['sheet_col'] ) ) )
+						|| stripos( $spec['label'], 'Trans' ) !== false
+						|| stripos( $spec['label'], 'Gear' ) !== false
+						|| stripos( $spec['meta_key'], 'trans' ) !== false ) {
+						$tr_val = get_post_meta( $post_id, $spec['meta_key'], true );
+						if ( ! empty( $tr_val ) ) {
+							$transmission_display = $tr_val;
+							break;
+						}
+					}
+				}
+			}
+
+			// 2 Rows x 3 Columns grid specs with gray icon
+			// Row 1: Fuel Type (S), Power Options (T), Driveline (R)
+			// Row 2: Mileage (F), Transmission (Q), Condition (V)
+			$card_specs_grid = array(
+				array(
+					'label' => __( 'Fuel Type', 'dynamic-sheet-sync' ),
+					'value' => ! empty( $fuel_display ) ? $fuel_display : '—',
+					'icon'  => self::get_feature_icon_svg( 'fuel', 'fuel' ),
+				),
+				array(
+					'label' => __( 'Power Options', 'dynamic-sheet-sync' ),
+					'value' => ! empty( $power_options_display ) ? $power_options_display : '—',
+					'icon'  => self::get_feature_icon_svg( 'power', 'engine' ),
+				),
+				array(
+					'label' => __( 'Driveline', 'dynamic-sheet-sync' ),
+					'value' => ! empty( $driveline_display ) ? $driveline_display : '—',
+					'icon'  => self::get_feature_icon_svg( 'drive', 'drive' ),
+				),
+				array(
+					'label' => __( 'Mileage', 'dynamic-sheet-sync' ),
+					'value' => ! empty( $mileage_display ) ? $mileage_display : ( ! empty( $mileage ) ? $mileage : '—' ),
+					'icon'  => self::get_feature_icon_svg( 'mileage', 'mileage' ),
+				),
+				array(
+					'label' => __( 'Transmission', 'dynamic-sheet-sync' ),
+					'value' => ! empty( $transmission_display ) ? $transmission_display : '—',
+					'icon'  => self::get_feature_icon_svg( 'gearbox', 'gearbox' ),
+				),
+				array(
+					'label' => __( 'Condition', 'dynamic-sheet-sync' ),
+					'value' => ! empty( $condition ) ? $condition : '—',
+					'icon'  => self::get_feature_icon_svg( 'body', 'body' ),
+				),
+			);
+
+			// Format Price (Creative Selling Price - Discount presentation).
 			$clean_price    = floatval( preg_replace( '/[^0-9.]/', '', strval( $price ) ) );
 			$has_discount   = false;
 			$discount_clean = floatval( preg_replace( '/[^0-9.]/', '', strval( $discount ) ) );
@@ -3035,7 +3205,7 @@ class Dynamic_Sheet_Post_Sync {
 				data-mileage="<?php echo esc_attr( $mileage ); ?>"
 				data-url="<?php echo esc_url( $permalink ); ?>">
 				
-				<!-- Left Column: Card Image Slider -->
+				<!-- Row 1: Vehicle Card Image Slider -->
 				<div class="vehicle-card-slider-container" data-current-index="0">
 					<?php if ( $image_count > 0 ) : ?>
 						<div class="vehicle-slider-track">
@@ -3074,41 +3244,53 @@ class Dynamic_Sheet_Post_Sync {
 					<?php endif; ?>
 				</div>
 
-				<!-- Right Column: Vehicle Details (Line 1: Title, Line 2: Mileage | Body Style | Condition, Line 3: Price) -->
+				<!-- Vehicle Card Content (Vertical Flow) -->
 				<div class="vehicle-card-body">
-					<div class="vehicle-card-details">
-						<!-- Line 1: Vehicle Card Title -->
-						<h3 class="vehicle-card-title">
-							<a href="<?php echo esc_url( $permalink ); ?>">
-								<?php echo esc_html( $car_title ); ?>
-							</a>
-						</h3>
+					<!-- Row 2: Vehicle Card Title -->
+					<h3 class="vehicle-card-title">
+						<a href="<?php echo esc_url( $permalink ); ?>">
+							<?php echo esc_html( $car_title ); ?>
+						</a>
+					</h3>
 
-						<!-- Line 2: Mileage | Body Style | Condition (Values only, simple text) -->
-						<?php if ( ! empty( $specs_line_text ) ) : ?>
-							<div class="vehicle-card-specs-line">
-								<?php echo esc_html( $specs_line_text ); ?>
-							</div>
-						<?php endif; ?>
-
-						<!-- Line 3: Price & Discount (Creative Presentation) -->
-						<?php if ( $clean_price > 0 || ! empty( $price ) ) : ?>
-							<div class="vehicle-card-price-unique">
-								<span class="vehicle-card-price-current">
-									<?php echo esc_html( $atts['currency'] . number_format_i18n( $final_price ) ); ?>
+					<!-- Row 3: 2 Rows 3 Columns Grid Only Details with Gray Icons -->
+					<div class="vehicle-card-specs-grid">
+						<?php foreach ( $card_specs_grid as $spec_item ) : ?>
+							<div class="vehicle-card-spec-item" title="<?php echo esc_attr( $spec_item['label'] . ': ' . $spec_item['value'] ); ?>">
+								<span class="vehicle-card-spec-icon">
+									<?php echo $spec_item['icon']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 								</span>
-								<?php if ( $has_discount ) : ?>
-									<span class="vehicle-card-price-original" title="<?php esc_attr_e( 'Original Selling Price', 'dynamic-sheet-sync' ); ?>">
-										<?php echo esc_html( $atts['currency'] . number_format_i18n( $clean_price ) ); ?>
-									</span>
-									<?php if ( ! empty( $card_badge ) ) : ?>
-										<span class="vehicle-card-discount-badge">
-											<?php echo esc_html( $card_badge ); ?>
-										</span>
-									<?php endif; ?>
-								<?php endif; ?>
+								<span class="vehicle-card-spec-val">
+									<?php echo esc_html( $spec_item['value'] ); ?>
+								</span>
 							</div>
-						<?php endif; ?>
+						<?php endforeach; ?>
+					</div>
+
+					<!-- Row 4: Unique Price & Discount -->
+					<?php if ( $clean_price > 0 || ! empty( $price ) ) : ?>
+						<div class="vehicle-card-price-unique">
+							<span class="vehicle-card-price-current">
+								<?php echo esc_html( $atts['currency'] . number_format_i18n( $final_price ) ); ?>
+							</span>
+							<?php if ( $has_discount ) : ?>
+								<span class="vehicle-card-price-original" title="<?php esc_attr_e( 'Original Selling Price', 'dynamic-sheet-sync' ); ?>">
+									<?php echo esc_html( $atts['currency'] . number_format_i18n( $clean_price ) ); ?>
+								</span>
+								<?php if ( ! empty( $card_badge ) ) : ?>
+									<span class="vehicle-card-discount-badge">
+										<?php echo esc_html( $card_badge ); ?>
+									</span>
+								<?php endif; ?>
+							<?php endif; ?>
+						</div>
+					<?php endif; ?>
+
+					<!-- Row 5: Explore More Button (Red Background, White Text) -->
+					<div class="vehicle-card-action">
+						<a href="<?php echo esc_url( $permalink ); ?>" class="vehicle-card-btn-explore">
+							<?php esc_html_e( 'Explore More', 'dynamic-sheet-sync' ); ?>
+						</a>
 					</div>
 				</div>
 			</div>
