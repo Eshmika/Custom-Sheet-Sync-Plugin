@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Dynamic Sheet to Post Type Sync & Vehicle Product Grid
  * Description: Automatically imports and syncs Google Sheet vehicle inventory into WordPress posts/products with multi-column titles, Google Drive image gallery slider (AA & AB columns), responsive creative filters, 9-card pagination, and dedicated full vehicle information pages.
- * Version: 2.2.9
+ * Version: 2.3.1
  * Author: Eshmika Hettiarachchi
  * Text Domain: dynamic-sheet-sync
  * License: GPL2
@@ -674,21 +674,29 @@ class Dynamic_Sheet_Post_Sync {
 				letter-spacing: 0.2px;
 			}
 
-			/* Row 5: Explore More Button (Red Background, White Text) */
+			/* Row 5: Action Buttons Row (Contact Agent & Explore More) */
 			.vehicle-card-action {
 				margin-top: 0;
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 10px;
+				width: 100%;
 			}
-			.vehicle-card-btn-explore {
+			.vehicle-card-action:has(> :only-child) {
+				grid-template-columns: 1fr;
+			}
+			.vehicle-card-btn-contact {
 				display: flex;
 				align-items: center;
 				justify-content: center;
+				gap: 6px;
 				width: 100%;
-				padding: 10px 16px;
-				background: #dc2626; /* Red color background */
-				color: #ffffff !important; /* White color text */
-				font-size: 13.5px;
+				padding: 10px 12px;
+				background: #dc2626; 
+				color: #ffffff !important;
+				font-size: 13px;
 				font-weight: 700;
-				letter-spacing: 0.3px;
+				letter-spacing: 0.2px;
 				border-radius: 8px;
 				text-align: center;
 				text-decoration: none !important;
@@ -696,6 +704,37 @@ class Dynamic_Sheet_Post_Sync {
 				box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
 				transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 				box-sizing: border-box;
+				white-space: nowrap;
+			}
+			.vehicle-card-btn-contact:hover {
+				background: #b91c1c;
+				border-color: #b91c1c;
+				color: #ffffff !important;
+				box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+				transform: translateY(-1px);
+			}
+			.vehicle-card-btn-contact svg {
+				flex-shrink: 0;
+			}
+			.vehicle-card-btn-explore {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				width: 100%;
+				padding: 10px 12px;
+				background: #dc2626; /* Red color background */
+				color: #ffffff !important; /* White color text */
+				font-size: 13px;
+				font-weight: 700;
+				letter-spacing: 0.2px;
+				border-radius: 8px;
+				text-align: center;
+				text-decoration: none !important;
+				border: 1px solid #dc2626;
+				box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);
+				transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+				box-sizing: border-box;
+				white-space: nowrap;
 			}
 			.vehicle-card-btn-explore:hover {
 				background: #b91c1c;
@@ -2508,6 +2547,10 @@ class Dynamic_Sheet_Post_Sync {
 		if ( false === $year_index ) {
 			$year_index = self::resolve_col_index( 'Year', $headers );
 		}
+		$client_email_index = self::resolve_col_index( 'AU', $headers );
+		if ( false === $client_email_index ) {
+			$client_email_index = self::resolve_col_index( 'Client Email', $headers );
+		}
 		$image_index     = self::resolve_col_index( $field_image_col, $headers );
 		$sub_image_index = self::resolve_col_index( $field_sub_img_col, $headers );
 
@@ -2717,6 +2760,11 @@ class Dynamic_Sheet_Post_Sync {
 				$year_val_sync = ( false !== $year_index && isset( $row_data[$year_index] ) ) ? sanitize_text_field( trim( $row_data[$year_index] ) ) : '';
 				if ( ! empty( $year_val_sync ) ) {
 					update_post_meta( $post_id, '_vehicle_year', $year_val_sync );
+				}
+
+				$client_email_val_sync = ( false !== $client_email_index && isset( $row_data[$client_email_index] ) ) ? sanitize_email( trim( $row_data[$client_email_index] ) ) : '';
+				if ( ! empty( $client_email_val_sync ) ) {
+					update_post_meta( $post_id, '_vehicle_client_email', $client_email_val_sync );
 				}
 
 				// Save Stock Status Meta.
@@ -3432,10 +3480,79 @@ class Dynamic_Sheet_Post_Sync {
 						</div>
 					<?php endif; ?>
 
-					<!-- Row 5: Explore More Button (Red Background, White Text) -->
+					<!-- Row 5: Action Buttons (Contact Agent & Explore More) -->
+					<?php
+					$client_email = get_post_meta( $post_id, '_vehicle_client_email', true );
+					if ( empty( $client_email ) ) {
+						foreach ( $custom_meta as $spec ) {
+							if ( ( isset( $spec['sheet_col'] ) && 'AU' === strtoupper( trim( $spec['sheet_col'] ) ) )
+								|| stripos( $spec['label'], 'Client Email' ) !== false
+								|| stripos( $spec['label'], 'Agent Email' ) !== false
+								|| stripos( $spec['meta_key'], 'client_email' ) !== false ) {
+								$em_val = get_post_meta( $post_id, $spec['meta_key'], true );
+								if ( ! empty( $em_val ) && is_email( $em_val ) ) {
+									$client_email = $em_val;
+									break;
+								}
+							}
+						}
+					}
+
+					// Fallback to overview meta if configured there.
+					if ( empty( $client_email ) ) {
+						$overview_meta = isset( $options['overview_meta'] ) && is_array( $options['overview_meta'] ) ? $options['overview_meta'] : array();
+						foreach ( $overview_meta as $item ) {
+							if ( ( isset( $item['sheet_col'] ) && 'AU' === strtoupper( trim( $item['sheet_col'] ) ) )
+								|| stripos( $item['label'], 'Email' ) !== false ) {
+								$em_val = get_post_meta( $post_id, $item['meta_key'], true );
+								if ( ! empty( $em_val ) && is_email( $em_val ) ) {
+									$client_email = $em_val;
+									break;
+								}
+							}
+						}
+					}
+
+					// Build creative email subject & body.
+					$email_subject = sprintf( __( 'Inquiry regarding: %s', 'dynamic-sheet-sync' ), $car_title );
+					if ( ! empty( $car_id ) ) {
+						$email_subject .= ' [ID: #' . $car_id . ']';
+					}
+
+					$email_body_lines = array(
+						__( 'Hello Agent,', 'dynamic-sheet-sync' ),
+						'',
+						sprintf( __( 'I am interested in this vehicle: %s', 'dynamic-sheet-sync' ), $car_title ),
+					);
+					if ( ! empty( $car_id ) ) {
+						$email_body_lines[] = sprintf( __( 'Vehicle ID / VIN: #%s', 'dynamic-sheet-sync' ), $car_id );
+					}
+					if ( ! empty( $permalink ) ) {
+						$email_body_lines[] = sprintf( __( 'Vehicle Link: %s', 'dynamic-sheet-sync' ), $permalink );
+					}
+					$email_body_lines[] = '';
+					$email_body_lines[] = __( 'Please explain your question or problem below:', 'dynamic-sheet-sync' );
+					$email_body_lines[] = '--------------------------------------------------';
+					$email_body_lines[] = '[ Type your inquiry / questions here ]';
+					$email_body_lines[] = '';
+					$email_body_lines[] = __( 'Thank you,', 'dynamic-sheet-sync' );
+
+					$email_body = implode( "\r\n", $email_body_lines );
+
+					$mailto_url = 'mailto:' . esc_attr( $client_email ) . '?subject=' . rawurlencode( $email_subject ) . '&body=' . rawurlencode( $email_body );
+					?>
 					<div class="vehicle-card-action">
+						<?php if ( ! empty( $client_email ) ) : ?>
+							<a href="<?php echo esc_url( $mailto_url ); ?>" class="vehicle-card-btn-contact" title="<?php esc_attr_e( 'Contact Agent via Email', 'dynamic-sheet-sync' ); ?>">
+								<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+									<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+									<polyline points="22,6 12,13 2,6"></polyline>
+								</svg>
+								<span><?php esc_html_e( 'Contact Agent', 'dynamic-sheet-sync' ); ?></span>
+							</a>
+						<?php endif; ?>
 						<a href="<?php echo esc_url( $permalink ); ?>" class="vehicle-card-btn-explore">
-							<?php esc_html_e( 'Explore More', 'dynamic-sheet-sync' ); ?>
+							<span><?php esc_html_e( 'Explore More', 'dynamic-sheet-sync' ); ?></span>
 						</a>
 					</div>
 				</div>
